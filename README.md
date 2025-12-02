@@ -1,9 +1,11 @@
 # Brazilian E-Commerce Data Pipeline
+
 ## NTU DS3 Project
 
 A complete modern data engineering solution using the Olist Brazilian E-Commerce dataset, demonstrating end-to-end ELT pipeline implementation with cloud-native technologies.
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Technology Stack](#technology-stack)
@@ -60,21 +62,25 @@ This project implements a production-ready ELT (Extract, Load, Transform) data p
 ### Data Flow Layers
 
 1. **Ingestion Layer** (Python)
+
    - Downloads dataset from Kaggle API
    - Uploads raw CSVs to Google Cloud Storage (optional archiving)
    - Loads data into BigQuery raw tables with MD5-based deduplication
 
 2. **Staging Layer** (dbt views)
+
    - Cleans and standardizes raw data
    - Type casting and basic transformations
    - 7 staging models
 
 3. **Warehouse Layer** (dbt tables)
+
    - Star schema: 4 dimensions + 2 facts
    - Business logic and metrics
    - Partitioning & clustering for performance
 
 4. **Quality Layer** (dbt tests)
+
    - Uniqueness, referential integrity, null checks
    - Business rule validations
 
@@ -86,16 +92,16 @@ This project implements a production-ready ELT (Extract, Load, Transform) data p
 
 ## Technology Stack
 
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Language** | Python 3.9+ | Pipeline orchestration and ingestion |
-| **Data Warehouse** | Google BigQuery | Serverless, scalable data warehouse |
-| **Storage** | Google Cloud Storage | Raw data staging and archiving |
-| **Transformation** | dbt-bigquery | SQL-based data transformations |
-| **Orchestration** | Dagster | Pipeline scheduling and monitoring |
-| **Data Source** | Kaggle API | Brazilian E-Commerce dataset |
-| **Analytics** | Jupyter, Pandas, Matplotlib | Data analysis and visualization |
-| **Version Control** | Git/GitHub | Source code management |
+| Component           | Technology                  | Purpose                              |
+| ------------------- | --------------------------- | ------------------------------------ |
+| **Language**        | Python 3.9+                 | Pipeline orchestration and ingestion |
+| **Data Warehouse**  | Google BigQuery             | Serverless, scalable data warehouse  |
+| **Storage**         | Google Cloud Storage        | Raw data staging and archiving       |
+| **Transformation**  | dbt-bigquery                | SQL-based data transformations       |
+| **Orchestration**   | Dagster                     | Pipeline scheduling and monitoring   |
+| **Data Source**     | Kaggle API                  | Brazilian E-Commerce dataset         |
+| **Analytics**       | Jupyter, Pandas, Matplotlib | Data analysis and visualization      |
+| **Version Control** | Git/GitHub                  | Source code management               |
 
 ---
 
@@ -175,6 +181,7 @@ DS3-Project-Team/
 ### Prerequisites
 
 1. **Google Cloud Platform Account**
+
    - Create a GCP project
    - Enable BigQuery API
    - Enable Cloud Storage API (optional)
@@ -182,6 +189,7 @@ DS3-Project-Team/
    - Download service account JSON key
 
 2. **Kaggle Account**
+
    - Create account at [kaggle.com](https://www.kaggle.com)
    - Go to Account settings → API → "Create New API Token"
    - This downloads `kaggle.json` with your credentials
@@ -194,7 +202,7 @@ DS3-Project-Team/
 #### 1. Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/azniosman/DS3-Project-Team.git
 cd DS3-Project-Team
 ```
 
@@ -215,6 +223,7 @@ nano .env  # or use your preferred editor
 ```
 
 **.env file:**
+
 ```bash
 # Environment
 ENVIRONMENT=dev
@@ -279,6 +288,7 @@ dagster dev -f orchestration/definitions.py
 ```
 
 The pipeline will execute in order:
+
 1. Download dataset from Kaggle
 2. Upload to GCS (optional)
 3. Load to BigQuery raw tables
@@ -300,6 +310,7 @@ python src/ingestion/bigquery_loader.py --directory data/raw/brazilian-ecommerce
 ```
 
 **What this creates:**
+
 - 9 raw tables in BigQuery `staging` dataset:
   - `orders_raw`
   - `customers_raw`
@@ -331,6 +342,7 @@ dbt docs serve  # Opens browser to http://localhost:8080
 **What this creates:**
 
 **Staging Layer** (views in `dev_warehouse_staging`):
+
 - `stg_orders` - Cleaned orders with type casting
 - `stg_customers` - Customer data with location
 - `stg_products` - Product catalog
@@ -341,13 +353,15 @@ dbt docs serve  # Opens browser to http://localhost:8080
 
 **Warehouse Layer** (tables in `dev_warehouse_warehouse`):
 
-*Dimensions:*
+_Dimensions:_
+
 - `dim_customer` - Customer demographics with segmentation (Loyal/Repeat/One-time)
 - `dim_product` - Products with categories and sales tiers
 - `dim_seller` - Sellers with location and volume tiers
 - `dim_date` - Date dimension (2016-2020)
 
-*Facts:*
+_Facts:_
+
 - `fact_orders` - Order-level metrics (incremental, partitioned by date)
 - `fact_order_items` - Item-level details (incremental, partitioned)
 
@@ -358,6 +372,7 @@ jupyter notebook notebooks/analysis.ipynb
 ```
 
 The notebook contains:
+
 1. Monthly sales trends
 2. Top selling product categories
 3. Customer segmentation (RFM analysis)
@@ -373,15 +388,15 @@ Located in `dbt/models/staging/`
 
 **Purpose:** Clean and standardize raw data
 
-| Model | Description | Key Transformations |
-|-------|-------------|-------------------|
-| `stg_orders` | Order header data | Timestamp parsing, status normalization |
-| `stg_customers` | Customer info | Location standardization |
-| `stg_products` | Product catalog | Category translations |
-| `stg_order_items` | Order line items | Price/freight calculations |
-| `stg_payments` | Payment details | Type and value normalization |
-| `stg_sellers` | Seller profiles | Location standardization |
-| `stg_reviews` | Customer reviews | Score normalization |
+| Model             | Description       | Key Transformations                     |
+| ----------------- | ----------------- | --------------------------------------- |
+| `stg_orders`      | Order header data | Timestamp parsing, status normalization |
+| `stg_customers`   | Customer info     | Location standardization                |
+| `stg_products`    | Product catalog   | Category translations                   |
+| `stg_order_items` | Order line items  | Price/freight calculations              |
+| `stg_payments`    | Payment details   | Type and value normalization            |
+| `stg_sellers`     | Seller profiles   | Location standardization                |
+| `stg_reviews`     | Customer reviews  | Score normalization                     |
 
 ### Warehouse Models (6 models - Tables)
 
@@ -390,6 +405,7 @@ Located in `dbt/models/warehouse/`
 #### Dimension Tables
 
 **`dim_customer`** - SCD Type 1
+
 ```sql
 -- Columns:
 - customer_key (surrogate key)
@@ -401,6 +417,7 @@ Located in `dbt/models/warehouse/`
 ```
 
 **`dim_product`** - SCD Type 1
+
 ```sql
 -- Columns:
 - product_key (surrogate key)
@@ -411,6 +428,7 @@ Located in `dbt/models/warehouse/`
 ```
 
 **`dim_seller`** - SCD Type 1
+
 ```sql
 -- Columns:
 - seller_key (surrogate key)
@@ -421,6 +439,7 @@ Located in `dbt/models/warehouse/`
 ```
 
 **`dim_date`** - Date Dimension (2016-2020)
+
 ```sql
 -- Columns:
 - date_key
@@ -432,6 +451,7 @@ Located in `dbt/models/warehouse/`
 #### Fact Tables (Incremental)
 
 **`fact_orders`** - Order-level aggregates
+
 ```sql
 -- Partitioned by: order_purchase_date (daily)
 -- Clustered by: customer_key, order_status
@@ -449,6 +469,7 @@ Located in `dbt/models/warehouse/`
 ```
 
 **`fact_order_items`** - Item-level detail
+
 ```sql
 -- Partitioned by: shipping_limit_date (daily)
 -- Incremental strategy: merge on order_id + order_item_id
@@ -468,12 +489,14 @@ Located in `dbt/models/warehouse/`
 ### dbt Tests (30+ tests)
 
 **Staging Layer Tests** (`staging/schema.yml`):
+
 - Primary key uniqueness (all staging models)
 - NOT NULL constraints on critical fields
 - Referential integrity between tables
 - Accepted values for order_status, payment_type
 
 **Warehouse Layer Tests** (`warehouse/schema.yml`):
+
 - Surrogate key uniqueness (all dimensions & facts)
 - Foreign key relationships (facts → dimensions)
 - Business logic validations:
@@ -483,6 +506,7 @@ Located in `dbt/models/warehouse/`
   - Valid sales tiers
 
 **Run Tests:**
+
 ```bash
 cd dbt
 dbt test  # Run all tests
@@ -501,6 +525,7 @@ The BigQuery loader uses MD5 hashing to prevent duplicate loads:
 ```
 
 **Benefits:**
+
 - Safe to re-run ingestion
 - Audit trail of all loads
 - Prevents data duplication
@@ -512,22 +537,27 @@ The BigQuery loader uses MD5 hashing to prevent duplicate loads:
 ### Jupyter Notebook (`notebooks/analysis.ipynb`)
 
 **Analysis 1: Monthly Sales Trends**
+
 - Time series of order volume and revenue
 - Identifies seasonal patterns
 
 **Analysis 2: Top Product Categories**
+
 - Best-selling categories by revenue
 - Category distribution
 
 **Analysis 3: Customer Segmentation**
+
 - RFM (Recency, Frequency, Monetary) analysis
 - Identifies Loyal, Repeat, and One-time customers
 
 **Analysis 4: Delivery Performance**
+
 - On-time delivery rate by state
 - Average delivery time analysis
 
 **Run Notebook:**
+
 ```bash
 jupyter notebook notebooks/analysis.ipynb
 ```
@@ -541,12 +571,14 @@ jupyter notebook notebooks/analysis.ipynb
 The pipeline is orchestrated using Dagster with daily scheduling.
 
 **Assets:**
+
 1. `kaggle_dataset` - Downloads data
 2. `gcs_raw_data` - Uploads to GCS
 3. `bigquery_raw_tables` - Loads to BigQuery
 4. `dbt_project` - Runs dbt transformations
 
 **Start Dagster:**
+
 ```bash
 dagster dev -f orchestration/definitions.py
 ```
@@ -554,12 +586,14 @@ dagster dev -f orchestration/definitions.py
 **Web UI:** http://localhost:3000
 
 **Features:**
+
 - Dependency management (DAG)
 - Asset materialization tracking
 - Logging and monitoring
 - Daily schedule (00:00)
 
 **Configuration:**
+
 ```python
 # orchestration/definitions.py
 ScheduleDefinition(
@@ -576,24 +610,29 @@ ScheduleDefinition(
 ### Planned Features
 
 1. **Data Marts Layer**
+
    - `mart_sales_daily` - Daily aggregated sales
    - `mart_sales_monthly` - Monthly KPIs
    - `mart_customer_cohorts` - Cohort analysis
 
 2. **Advanced Analytics**
+
    - Customer churn prediction (ML)
    - Product recommendation engine
    - Demand forecasting
 
 3. **Dashboards**
+
    - Looker Studio for business metrics
    - Real-time KPI monitoring
 
 4. **Data Quality**
+
    - Great Expectations integration
    - Data profiling and anomaly detection
 
 5. **CI/CD**
+
    - Automated testing on PR
    - dbt Slim CI for changed models only
 
@@ -606,6 +645,7 @@ ScheduleDefinition(
 ## Key Metrics
 
 **Data Volume:**
+
 - ~100,000 orders
 - ~112,000 order items
 - ~100,000 customers
@@ -613,11 +653,13 @@ ScheduleDefinition(
 - ~32,000 products
 
 **Performance:**
+
 - Ingestion: ~2-3 minutes
 - dbt Run: ~30 seconds
 - End-to-end: ~5 minutes
 
 **Data Quality:**
+
 - 30+ automated tests
 - 100% test coverage on primary keys
 - Referential integrity validated
@@ -629,6 +671,7 @@ ScheduleDefinition(
 ### Common Issues
 
 **1. dbt connection error:**
+
 ```bash
 # Verify environment variables are set
 echo $GCP_PROJECT_ID
@@ -639,18 +682,21 @@ bq ls
 ```
 
 **2. Kaggle authentication failed:**
+
 ```bash
 # Ensure KAGGLE_USERNAME and KAGGLE_KEY are set
 # Or place kaggle.json in ~/.kaggle/
 ```
 
 **3. BigQuery permission denied:**
+
 ```bash
 # Service account needs BigQuery Admin role
 # Or at minimum: BigQuery Data Editor + BigQuery Job User
 ```
 
 **4. dbt deps fails:**
+
 ```bash
 cd dbt
 dbt clean
@@ -661,7 +707,7 @@ dbt deps
 
 ## Contributors
 
-NTU DS3 Project Team
+Group 3 Project Team
 
 ---
 
