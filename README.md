@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project builds a complete data pipeline and analytics ecosystem using the Braazilian E-Commerce dataset. It demonstrates best practices in data ingestion, transformation, quality assurance, warehousing and business intelligence powered by modern tools such as **Python**, **BigQuery**, **dbt**, **Great Expectations**, **Looker** and **Looker Studio**.
+This project builds a complete data pipeline and analytics ecosystem using the Braazilian E-Commerce dataset. It demonstrates best practices in data ingestion, transformation, quality assurance, warehousing and business intelligence powered by modern tools such as **Python**, **BigQuery**, **dbt**, **Looker** and **Looker Studio**.
 
 Ther result is a scalable, transparent and well governed data platform that enables analysts, data scientists and business stakeholders to extract reliable insights about customer behaviour, sales performance, logistics efficiency and marketplace operations.
 
@@ -10,7 +10,7 @@ Ther result is a scalable, transparent and well governed data platform that enab
 
 ### System Diagram
 
-![System Diagram](src/img/system_diagram.png "System Diagram")
+[View Architecture Diagram](docs/architecture.md)
 
 ---
 
@@ -27,7 +27,7 @@ Ther result is a scalable, transparent and well governed data platform that enab
 4. **Transformation Layer (dbt)**
    dbt applies modular SQL transformations, implements business logic, and manages documentation and lineage.
 
-5. **Data Quality (dbt Tests + Great Expectations)**
+5. **Data Quality (dbt Tests)**
    Automated validations ensure accuracy, completeness, freshness, and rule compliance.
 
 6. **Data Warehouse (Star Schema in BigQuery)**
@@ -50,7 +50,7 @@ Ther result is a scalable, transparent and well governed data platform that enab
 | **Data Ingestion**  | Python (pandas, sqlalchemy) + Google Cloud Storage | Serverless, cost-effective, idempotent loading                        |
 | **Data Warehouse**  | Google BigQuery                                    | Native dbt integration, partitioned/clustered, auto-scaling           |
 | **ELT Framework**   | dbt v1.3+ with dbt Cloud                           | Modular SQL, automated testing, documentation generation              |
-| **Data Quality**    | dbt tests + Great Expectations                     | Comprehensive validation layers, automated checks                     |
+| **Data Quality**    | dbt tests                                          | Comprehensive validation layers, automated checks                     |
 | **Analytics**       | Python (pandas, sqlalchemy, seaborn) in JupyterLab | Reproducible, shareable analysis notebooks                            |
 | **Orchestration**   | dbt Cloud (primary) or Google Cloud Composer       | Managed, scheduled, integrated pipeline runs                          |
 | **Dashboards**      | Looker Studio (free) + Looker (optional)           | Real-time BigQuery connection, role-based access, zero infrastructure |
@@ -110,7 +110,7 @@ The project is designed to work across multiple environments (development, stagi
 1. All Python code reads from `.env` via `src/utils/config.py`
 2. dbt profiles use the same environment variables
 3. Dashboards and notebooks automatically use the correct datasets based on `ENVIRONMENT`
-4. Great Expectations validation uses environment-aware connection strings
+
 
 ## 2. Data Ingestion
 
@@ -838,15 +838,14 @@ dbt run --selector staging_only
 
 ## 5. Data Quality Testing
 
-### Testing Strategy: Multi-Layer Approach
+### Testing Strategy: dbt-Native Approach
 
-Our data quality framework implements three complementary layers of validation:
+Our data quality framework implements a robust validation layer using dbt:
 
-- **Layer 1:** dbt native tests (173+ tests) - Schema validation, referential integrity
-- **Layer 2:** Great Expectations (17 expectations) - Statistical validation, data profiling
-- **Layer 3:** Custom dbt tests (15+ tests) - Business rule validation
+- **Layer 1:** dbt native tests - Schema validation, referential integrity
+- **Layer 2:** Custom dbt tests - Business rule validation
 
-**Total Validations:** 190+
+**Total Validations:** 170+
 **Data Quality Score:** 99.1%
 
 ---
@@ -943,61 +942,7 @@ dbt test --store-failures
 
 ---
 
-### Layer 2: Great Expectations
 
-**Expectation Suite:** `great_expectations/expectations/fact_orders_suite.json`
-
-```json
-{
-  "expectation_suite_name": "fact_orders_suite",
-  "expectations": [
-    {
-      "expectation_type": "expect_table_row_count_to_be_between",
-      "kwargs": {
-        "min_value": 90000,
-        "max_value": 150000
-      },
-      "meta": {
-        "notes": "Fact table should have between 90k-150k orders based on historical data"
-      }
-    },
-    {
-      "expectation_type": "expect_column_values_to_not_be_null",
-      "kwargs": {
-        "column": "order_id"
-      }
-    },
-    {
-      "expectation_type": "expect_column_values_to_be_unique",
-      "kwargs": {
-        "column": "order_id"
-      }
-    },
-    {
-      "expectation_type": "expect_column_values_to_be_between",
-      "kwargs": {
-        "column": "total_order_value",
-        "min_value": 0,
-        "max_value": 100000,
-        "mostly": 0.99
-      },
-      "meta": {
-        "notes": "99% of orders should be between 0 and 100k BRL"
-      }
-    },
-    {
-      "expectation_type": "expect_column_values_to_be_in_set",
-      "kwargs": {
-        "column": "order_status",
-        "value_set": [
-          "delivered",
-          "shipped",
-          "canceled",
-          "unavailable",
-          "invoiced",
-          "processing",
-          "approved",
-          "created"
         ]
       }
     },
@@ -1034,86 +979,28 @@ dbt test --store-failures
 }
 ```
 
-**Running Validations:**
 
-```python
-# Using Great Expectations CLI (Python)
-python src/validation/great_expectations_runner.py \
-    --table fact_orders \
-    --suite fact_orders_suite \
-    --build-docs
 
-# Validate all tables with their respective suites
-python src/validation/great_expectations_runner.py
 
-# Generate Data Docs (HTML reports)
-python src/validation/great_expectations_runner.py --build-docs
-
-  # Validate SINGLE table
-  python src/validation/great_expectations_runner.py --table fact_orders --suite fact_orders_suite
-
-  # Validate SINGLE table + build docs
-  python src/validation/great_expectations_runner.py --table fact_orders --suite fact_orders_suite --build-docs
-```
-
-**Python Validation Runner:** `src/validation/great_expectations_runner.py`
-
-```python
-import great_expectations as gx
-from google.cloud import bigquery
-
-class GreatExpectationsRunner:
-    def __init__(self):
-        self.context = gx.get_context()
-        self.client = bigquery.Client()
-
-    def validate_table(self, table_name: str, suite_name: str):
-        """Run validation for a single table"""
-        # Get data asset
-        data_asset = self.context.get_datasource("bigquery_warehouse")
-        batch = data_asset.get_batch(table_name)
-
-        # Run validation
-        results = self.context.run_checkpoint(
-            checkpoint_name=f"{suite_name}_checkpoint",
-            batch_request=batch
-        )
-
-        # Return results
-        return results
-
-    def generate_data_docs(self):
-        """Generate HTML documentation"""
-        self.context.build_data_docs()
-        print("Data Docs generated at: great_expectations/uncommitted/data_docs/")
-```
 
 ---
 
-### Layer 3: Custom SQL Checks
+### Layer 2: Custom Business Rules
 
-**Custom dbt Tests:** `dbt/tests/assert_payment_reconciliation.sql`
+**Example:** `dbt/models/warehouse/schema.yml`
 
-```sql
--- Test: Payment values should match order values within acceptable threshold
-select
-    order_id,
-    total_order_value,
-    total_payment_value,
-    abs(total_payment_value - total_order_value) as difference
-
-from {{ ref('fact_orders') }}
-
-where
-    abs(total_payment_value - total_order_value) >= 10
-    and order_status not in ('canceled', 'unavailable')
+```yaml
+  - name: fact_orders
+    tests:
+      - dbt_utils.expression_is_true:
+          expression: "total_order_value >= 0"
 ```
 
 **Execution:**
 
 ```bash
-# Run custom tests
-dbt test --select test_type:singular
+# Run all tests
+dbt test
 ```
 
 ---
@@ -1126,8 +1013,7 @@ dbt test --select test_type:singular
 | **Staging**   | Views      | 80+   | Schema validation, refs       |
 | **Warehouse** | Tables     | 58+   | Business rules, ranges        |
 | **Marts**     | Tables     | 35+   | Aggregation logic             |
-| **GE Suites** | All layers | 17    | Statistical validation        |
-| **TOTAL**     | -          | 190+  | -                             |
+| **TOTAL**     | -          | 170+  | -                             |
 
 **Quality Metrics:**
 
@@ -1144,14 +1030,13 @@ dbt test --select test_type:singular
 
 **Location:** `notebooks/`
 
-1. **01_exploratory_data_analysis.ipynb** - Revenue trends, customer segmentation, geographic analysis
-2. **02_cohort_ltv_analysis.ipynb** - Cohort retention, lifetime value, churn analysis
+1. **analysis.ipynb** - Revenue trends, customer segmentation, geographic analysis
 
 ---
 
 ### Notebook 1: Exploratory Data Analysis
 
-**File:** `notebooks/01_exploratory_data_analysis.ipynb`
+**File:** `notebooks/analysis.ipynb`
 
 **Setup: BigQuery Connection**
 
@@ -1491,43 +1376,40 @@ print("Summary metrics exported to reports/eda_summary_metrics.csv")
 
 ## 7. Pipeline Orchestration
 
-### dbt Cloud Configuration
+### GitHub Actions Workflow
 
-**Production Job Setup:**
-
-1. Connect GitHub repository to dbt Cloud
-2. Configure BigQuery connection (service account authentication)
-3. Create production environment
-4. Schedule daily production run
-
-**Production Job Configuration:**
+**File:** `.github/workflows/pipeline.yml`
 
 ```yaml
-name: "Daily Production Run"
-environment: Production
-schedule: "0 2 * * *" # 2 AM GMT +8
+name: Data Pipeline
 
-commands:
-  # Step 1: Check source freshness
-  - dbt source freshness
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight
+  workflow_dispatch:
 
-  # Step 2: Run all models
-  - dbt run --selector daily_run
+jobs:
+  ingestion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Ingestion Scripts
+        run: |
+          python src/ingestion/kaggle_downloader.py
+          python src/ingestion/gcs_uploader.py
+          python src/ingestion/bigquery_loader.py
 
-  # Step 3: Test data quality
-  - dbt test
-
-  # Step 4: Generate documentation
-  - dbt docs generate
-
-notifications:
-  email:
-    on_failure: true
-    on_success: false
-    recipients:
-      - az@azni.me
-
-run_timeout_seconds: 3600 # 1 hour timeout
+  transformation:
+    needs: ingestion
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run dbt
+        run: |
+          cd dbt
+          dbt deps
+          dbt run
+          dbt test
 ```
 
 ---
@@ -1649,13 +1531,10 @@ dbt source freshness
 dbt run --selector daily_run
 dbt test
 
-# Step 3: Data Quality Validation
-echo "Step 3: Running Great Expectations validations..."
-cd ..
-python src/validation/great_expectations_runner.py --validate-all
 
-# Step 4: Generate Documentation
-echo "Step 4: Generating documentation..."
+
+# Step 3: Generate Documentation
+echo "Step 3: Generating documentation..."
 cd dbt
 dbt docs generate
 cd ..
