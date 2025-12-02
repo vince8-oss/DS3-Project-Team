@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: raw
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: "{{ env_var('BQ_DATASET_RAW') }}"
+    tables:
+      - name: orders_raw
+      - name: customers_raw
+      - name: products_raw
+      - name: order_items_raw
+      - name: order_payments_raw
+      - name: sellers_raw
+      - name: order_reviews_raw

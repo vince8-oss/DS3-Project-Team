@@ -1,0 +1,66 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: Customer dimension
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_product
+    description: Product dimension
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_seller
+    description: Seller dimension
+    columns:
+      - name: seller_id
+        tests:
+          - unique
+          - not_null
+
+  - name: fact_orders
+    description: Orders fact table
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_id
+      - name: total_order_value
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+  - name: fact_order_items
+    description: Order items fact table
+    columns:
+      - name: order_item_key
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        tests:
+          - relationships:
+              to: ref('fact_orders')
+              field: order_id
+      - name: product_id
+        tests:
+          - relationships:
+              to: ref('dim_product')
+              field: product_id
+      - name: seller_id
+        tests:
+          - relationships:
+              to: ref('dim_seller')
+              field: seller_id
