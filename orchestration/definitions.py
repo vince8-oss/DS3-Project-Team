@@ -1,6 +1,6 @@
 from dagster import Definitions, load_assets_from_modules, ScheduleDefinition, define_asset_job
 from dagster_dbt import DbtCliResource
-from .assets import ingestion, dbt
+from orchestration.assets import ingestion, dbt
 import os
 
 # Load assets
