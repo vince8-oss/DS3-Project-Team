@@ -1,6 +1,7 @@
 # Brazilian E-Commerce Data Pipeline - Data Dictionary
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [Raw Layer Tables](#raw-layer-tables)
 3. [Staging Layer Models](#staging-layer-models)
@@ -15,6 +16,7 @@
 ## Overview
 
 ### Dataset Information
+
 - **Source**: Olist Brazilian E-Commerce Public Dataset
 - **Dataset URL**: https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
 - **Time Period**: September 2016 - August 2018
@@ -22,6 +24,7 @@
 - **Geography**: Brazil (all states)
 
 ### Layer Structure
+
 ```
 Raw Layer (staging dataset)
   ↓
@@ -37,6 +40,7 @@ Warehouse Layer (dev_warehouse_warehouse)
 ## Raw Layer Tables
 
 ### Dataset: `staging`
+
 Location: BigQuery dataset specified by `BQ_DATASET_RAW` environment variable
 
 ---
@@ -49,18 +53,19 @@ Location: BigQuery dataset specified by `BQ_DATASET_RAW` environment variable
 
 **Primary Key**: `order_id`
 
-| Column Name | Data Type | Nullable | Description | Example Value |
-|------------|-----------|----------|-------------|---------------|
-| `order_id` | STRING | No | Unique identifier for each order | `e481f51cbdc54678b7cc49136f2d6af7` |
-| `customer_id` | STRING | No | Foreign key to customer who placed the order | `9ef432eb6251297304e76186b10a928d` |
-| `order_status` | STRING | No | Current status of the order | `delivered`, `shipped`, `canceled` |
-| `order_purchase_timestamp` | STRING | Yes | Timestamp when order was placed | `2017-10-02 10:56:33` |
-| `order_approved_at` | STRING | Yes | Timestamp when payment was approved | `2017-10-02 11:07:15` |
-| `order_delivered_carrier_date` | STRING | Yes | Timestamp when order was handed to logistics | `2017-10-04 19:55:00` |
-| `order_delivered_customer_date` | STRING | Yes | Actual delivery timestamp to customer | `2017-10-10 21:25:13` |
-| `order_estimated_delivery_date` | STRING | Yes | Estimated delivery date shown to customer | `2017-10-18 00:00:00` |
+| Column Name                     | Data Type | Nullable | Description                                  | Example Value                      |
+| ------------------------------- | --------- | -------- | -------------------------------------------- | ---------------------------------- |
+| `order_id`                      | STRING    | No       | Unique identifier for each order             | `e481f51cbdc54678b7cc49136f2d6af7` |
+| `customer_id`                   | STRING    | No       | Foreign key to customer who placed the order | `9ef432eb6251297304e76186b10a928d` |
+| `order_status`                  | STRING    | No       | Current status of the order                  | `delivered`, `shipped`, `canceled` |
+| `order_purchase_timestamp`      | STRING    | Yes      | Timestamp when order was placed              | `2017-10-02 10:56:33`              |
+| `order_approved_at`             | STRING    | Yes      | Timestamp when payment was approved          | `2017-10-02 11:07:15`              |
+| `order_delivered_carrier_date`  | STRING    | Yes      | Timestamp when order was handed to logistics | `2017-10-04 19:55:00`              |
+| `order_delivered_customer_date` | STRING    | Yes      | Actual delivery timestamp to customer        | `2017-10-10 21:25:13`              |
+| `order_estimated_delivery_date` | STRING    | Yes      | Estimated delivery date shown to customer    | `2017-10-18 00:00:00`              |
 
 **Business Rules**:
+
 - One order can have multiple items (1:N with order_items)
 - One order can have multiple payments (1:N with payments)
 - Order status values: `delivered`, `shipped`, `canceled`, `unavailable`, `invoiced`, `processing`, `created`, `approved`
@@ -76,15 +81,16 @@ Location: BigQuery dataset specified by `BQ_DATASET_RAW` environment variable
 
 **Primary Key**: `customer_id`
 
-| Column Name | Data Type | Nullable | Description | Example Value |
-|------------|-----------|----------|-------------|---------------|
-| `customer_id` | STRING | No | Unique identifier for customer per order | `06b8999e2fba1a1fbc88172c00ba8bc7` |
-| `customer_unique_id` | STRING | No | True unique customer ID (can have multiple customer_ids) | `861eff4711a542e4b93843c6dd7febb0` |
-| `customer_zip_code_prefix` | STRING | Yes | First 5 digits of customer postal code | `14409` |
-| `customer_city` | STRING | Yes | Customer city name | `sao paulo`, `rio de janeiro` |
-| `customer_state` | STRING | Yes | Two-letter state code | `SP`, `RJ`, `MG` |
+| Column Name                | Data Type | Nullable | Description                                              | Example Value                      |
+| -------------------------- | --------- | -------- | -------------------------------------------------------- | ---------------------------------- |
+| `customer_id`              | STRING    | No       | Unique identifier for customer per order                 | `06b8999e2fba1a1fbc88172c00ba8bc7` |
+| `customer_unique_id`       | STRING    | No       | True unique customer ID (can have multiple customer_ids) | `861eff4711a542e4b93843c6dd7febb0` |
+| `customer_zip_code_prefix` | STRING    | Yes      | First 5 digits of customer postal code                   | `14409`                            |
+| `customer_city`            | STRING    | Yes      | Customer city name                                       | `sao paulo`, `rio de janeiro`      |
+| `customer_state`           | STRING    | Yes      | Two-letter state code                                    | `SP`, `RJ`, `MG`                   |
 
 **Business Rules**:
+
 - `customer_id` is unique per order but same person can have multiple IDs
 - `customer_unique_id` tracks the same person across multiple orders
 - Brazilian states use 2-letter codes (e.g., SP=São Paulo, RJ=Rio de Janeiro)
@@ -100,19 +106,20 @@ Location: BigQuery dataset specified by `BQ_DATASET_RAW` environment variable
 
 **Primary Key**: `product_id`
 
-| Column Name | Data Type | Nullable | Description | Example Value |
-|------------|-----------|----------|-------------|---------------|
-| `product_id` | STRING | No | Unique product identifier | `1e9e8ef04dbcff4541ed26657ea517e5` |
-| `product_category_name` | STRING | Yes | Category name in Portuguese | `beleza_saude`, `esporte_lazer` |
-| `product_name_lenght` | STRING | Yes | Character length of product name | `58` |
-| `product_description_lenght` | STRING | Yes | Character length of product description | `394` |
-| `product_photos_qty` | STRING | Yes | Number of product photos | `4` |
-| `product_weight_g` | STRING | Yes | Product weight in grams | `700` |
-| `product_length_cm` | STRING | Yes | Product package length in cm | `30` |
-| `product_height_cm` | STRING | Yes | Product package height in cm | `10` |
-| `product_width_cm` | STRING | Yes | Product package width in cm | `20` |
+| Column Name                  | Data Type | Nullable | Description                             | Example Value                      |
+| ---------------------------- | --------- | -------- | --------------------------------------- | ---------------------------------- |
+| `product_id`                 | STRING    | No       | Unique product identifier               | `1e9e8ef04dbcff4541ed26657ea517e5` |
+| `product_category_name`      | STRING    | Yes      | Category name in Portuguese             | `beleza_saude`, `esporte_lazer`    |
+| `product_name_lenght`        | STRING    | Yes      | Character length of product name        | `58`                               |
+| `product_description_lenght` | STRING    | Yes      | Character length of product description | `394`                              |
+| `product_photos_qty`         | STRING    | Yes      | Number of product photos                | `4`                                |
+| `product_weight_g`           | STRING    | Yes      | Product weight in grams                 | `700`                              |
+| `product_length_cm`          | STRING    | Yes      | Product package length in cm            | `30`                               |
+| `product_height_cm`          | STRING    | Yes      | Product package height in cm            | `10`                               |
+| `product_width_cm`           | STRING    | Yes      | Product package width in cm             | `20`                               |
 
 **Business Rules**:
+
 - Dimensions represent package size, not product size
 - Weight includes packaging
 - Category names are in Portuguese (translated in staging layer)
@@ -128,17 +135,18 @@ Location: BigQuery dataset specified by `BQ_DATASET_RAW` environment variable
 
 **Composite Primary Key**: `order_id` + `order_item_id`
 
-| Column Name | Data Type | Nullable | Description | Example Value |
-|------------|-----------|----------|-------------|---------------|
-| `order_id` | STRING | No | Foreign key to orders table | `00010242fe8c5a6d1ba2dd792cb16214` |
-| `order_item_id` | STRING | No | Sequential item number within order (1, 2, 3...) | `1` |
-| `product_id` | STRING | No | Foreign key to products table | `4244733e06e7ecb4970a6e2683c13e61` |
-| `seller_id` | STRING | No | Foreign key to sellers table | `48436dade18ac8b2bce089ec2a041202` |
-| `shipping_limit_date` | STRING | Yes | Seller shipping deadline | `2017-09-19 09:45:35` |
-| `price` | STRING | Yes | Item price in Brazilian Reals (BRL) | `58.90` |
-| `freight_value` | STRING | Yes | Shipping cost allocated to this item | `13.29` |
+| Column Name           | Data Type | Nullable | Description                                      | Example Value                      |
+| --------------------- | --------- | -------- | ------------------------------------------------ | ---------------------------------- |
+| `order_id`            | STRING    | No       | Foreign key to orders table                      | `00010242fe8c5a6d1ba2dd792cb16214` |
+| `order_item_id`       | STRING    | No       | Sequential item number within order (1, 2, 3...) | `1`                                |
+| `product_id`          | STRING    | No       | Foreign key to products table                    | `4244733e06e7ecb4970a6e2683c13e61` |
+| `seller_id`           | STRING    | No       | Foreign key to sellers table                     | `48436dade18ac8b2bce089ec2a041202` |
+| `shipping_limit_date` | STRING    | Yes      | Seller shipping deadline                         | `2017-09-19 09:45:35`              |
+| `price`               | STRING    | Yes      | Item price in Brazilian Reals (BRL)              | `58.90`                            |
+| `freight_value`       | STRING    | Yes      | Shipping cost allocated to this item             | `13.29`                            |
 
 **Business Rules**:
+
 - One order can have multiple items (order_item_id starts at 1 for each order)
 - Total order value = sum(price + freight_value) for all items
 - Freight is allocated per item (not per order)
@@ -154,15 +162,16 @@ Location: BigQuery dataset specified by `BQ_DATASET_RAW` environment variable
 
 **Composite Primary Key**: `order_id` + `payment_sequential`
 
-| Column Name | Data Type | Nullable | Description | Example Value |
-|------------|-----------|----------|-------------|---------------|
-| `order_id` | STRING | No | Foreign key to orders table | `b81ef226f3fe1789b1e8b2acac839d17` |
-| `payment_sequential` | INTEGER | No | Payment sequence number (1, 2, 3 for split payments) | `1` |
-| `payment_type` | STRING | No | Payment method used | `credit_card`, `boleto`, `debit_card` |
-| `payment_installments` | INTEGER | Yes | Number of installments (1 = full payment) | `10` |
-| `payment_value` | STRING | Yes | Payment amount in BRL | `141.80` |
+| Column Name            | Data Type | Nullable | Description                                          | Example Value                         |
+| ---------------------- | --------- | -------- | ---------------------------------------------------- | ------------------------------------- |
+| `order_id`             | STRING    | No       | Foreign key to orders table                          | `b81ef226f3fe1789b1e8b2acac839d17`    |
+| `payment_sequential`   | INTEGER   | No       | Payment sequence number (1, 2, 3 for split payments) | `1`                                   |
+| `payment_type`         | STRING    | No       | Payment method used                                  | `credit_card`, `boleto`, `debit_card` |
+| `payment_installments` | INTEGER   | Yes      | Number of installments (1 = full payment)            | `10`                                  |
+| `payment_value`        | STRING    | Yes      | Payment amount in BRL                                | `141.80`                              |
 
 **Business Rules**:
+
 - One order can have multiple payments (split payment)
 - Payment types: `credit_card`, `boleto`, `voucher`, `debit_card`
 - Installments common in Brazil (up to 24x for credit cards)
@@ -178,14 +187,15 @@ Location: BigQuery dataset specified by `BQ_DATASET_RAW` environment variable
 
 **Primary Key**: `seller_id`
 
-| Column Name | Data Type | Nullable | Description | Example Value |
-|------------|-----------|----------|-------------|---------------|
-| `seller_id` | STRING | No | Unique seller identifier | `3442f8959a84dea7ee197c632cb2df15` |
-| `seller_zip_code_prefix` | STRING | Yes | First 5 digits of seller postal code | `13023` |
-| `seller_city` | STRING | Yes | Seller city name | `campinas`, `sao paulo` |
-| `seller_state` | STRING | Yes | Two-letter state code | `SP`, `PR` |
+| Column Name              | Data Type | Nullable | Description                          | Example Value                      |
+| ------------------------ | --------- | -------- | ------------------------------------ | ---------------------------------- |
+| `seller_id`              | STRING    | No       | Unique seller identifier             | `3442f8959a84dea7ee197c632cb2df15` |
+| `seller_zip_code_prefix` | STRING    | Yes      | First 5 digits of seller postal code | `13023`                            |
+| `seller_city`            | STRING    | Yes      | Seller city name                     | `campinas`, `sao paulo`            |
+| `seller_state`           | STRING    | Yes      | Two-letter state code                | `SP`, `PR`                         |
 
 **Business Rules**:
+
 - Sellers are third-party merchants on Olist marketplace
 - One seller can fulfill multiple order items
 - Location affects shipping time and cost
@@ -200,17 +210,18 @@ Location: BigQuery dataset specified by `BQ_DATASET_RAW` environment variable
 
 **Primary Key**: `review_id`
 
-| Column Name | Data Type | Nullable | Description | Example Value |
-|------------|-----------|----------|-------------|---------------|
-| `review_id` | STRING | No | Unique review identifier | `7bc2406110b926393aa56f80a40eba40` |
-| `order_id` | STRING | No | Foreign key to orders table | `73fc7af87114b39712e6da79b0a377eb` |
-| `review_score` | STRING | Yes | Rating from 1 (worst) to 5 (best) | `4` |
-| `review_comment_title` | STRING | Yes | Review title/summary | `Satisfeito` |
-| `review_comment_message` | STRING | Yes | Review text body | `Entrega rápida e produto de qualidade` |
-| `review_creation_date` | STRING | Yes | When review was written | `2018-01-18 00:00:00` |
-| `review_answer_timestamp` | STRING | Yes | When seller responded to review | `2018-01-18 21:46:59` |
+| Column Name               | Data Type | Nullable | Description                       | Example Value                           |
+| ------------------------- | --------- | -------- | --------------------------------- | --------------------------------------- |
+| `review_id`               | STRING    | No       | Unique review identifier          | `7bc2406110b926393aa56f80a40eba40`      |
+| `order_id`                | STRING    | No       | Foreign key to orders table       | `73fc7af87114b39712e6da79b0a377eb`      |
+| `review_score`            | STRING    | Yes      | Rating from 1 (worst) to 5 (best) | `4`                                     |
+| `review_comment_title`    | STRING    | Yes      | Review title/summary              | `Satisfeito`                            |
+| `review_comment_message`  | STRING    | Yes      | Review text body                  | `Entrega rápida e produto de qualidade` |
+| `review_creation_date`    | STRING    | Yes      | When review was written           | `2018-01-18 00:00:00`                   |
+| `review_answer_timestamp` | STRING    | Yes      | When seller responded to review   | `2018-01-18 21:46:59`                   |
 
 **Business Rules**:
+
 - One order can have 0 or 1 review (optional)
 - Review score: 1 = very dissatisfied, 5 = very satisfied
 - Comments are in Portuguese
@@ -226,15 +237,16 @@ Location: BigQuery dataset specified by `BQ_DATASET_RAW` environment variable
 
 **Composite Key**: `geolocation_zip_code_prefix` + `geolocation_lat` + `geolocation_lng`
 
-| Column Name | Data Type | Nullable | Description | Example Value |
-|------------|-----------|----------|-------------|---------------|
-| `geolocation_zip_code_prefix` | STRING | Yes | First 5 digits of postal code | `01037` |
-| `geolocation_lat` | STRING | Yes | Latitude coordinate | `-23.545621` |
-| `geolocation_lng` | STRING | Yes | Longitude coordinate | `-46.639292` |
-| `geolocation_city` | STRING | Yes | City name | `sao paulo` |
-| `geolocation_state` | STRING | Yes | Two-letter state code | `SP` |
+| Column Name                   | Data Type | Nullable | Description                   | Example Value |
+| ----------------------------- | --------- | -------- | ----------------------------- | ------------- |
+| `geolocation_zip_code_prefix` | STRING    | Yes      | First 5 digits of postal code | `01037`       |
+| `geolocation_lat`             | STRING    | Yes      | Latitude coordinate           | `-23.545621`  |
+| `geolocation_lng`             | STRING    | Yes      | Longitude coordinate          | `-46.639292`  |
+| `geolocation_city`            | STRING    | Yes      | City name                     | `sao paulo`   |
+| `geolocation_state`           | STRING    | Yes      | Two-letter state code         | `SP`          |
 
 **Business Rules**:
+
 - Multiple lat/lng entries per ZIP code (ZIP code areas, not points)
 - Used to calculate delivery distances
 - Not currently used in warehouse layer (future enhancement)
@@ -249,12 +261,13 @@ Location: BigQuery dataset specified by `BQ_DATASET_RAW` environment variable
 
 **Primary Key**: `product_category_name` (Portuguese)
 
-| Column Name | Data Type | Nullable | Description | Example Value |
-|------------|-----------|----------|-------------|---------------|
-| `product_category_name` | STRING | No | Category name in Portuguese | `beleza_saude` |
-| `product_category_name_english` | STRING | No | Category name in English | `health_beauty` |
+| Column Name                     | Data Type | Nullable | Description                 | Example Value   |
+| ------------------------------- | --------- | -------- | --------------------------- | --------------- |
+| `product_category_name`         | STRING    | No       | Category name in Portuguese | `beleza_saude`  |
+| `product_category_name_english` | STRING    | No       | Category name in English    | `health_beauty` |
 
 **Business Rules**:
+
 - Used to join with products for English category names
 - Some Portuguese categories may not have translations (NULL)
 - Categories use snake_case naming
@@ -264,6 +277,7 @@ Location: BigQuery dataset specified by `BQ_DATASET_RAW` environment variable
 ## Staging Layer Models
 
 ### Dataset: `dev_warehouse_staging`
+
 Location: BigQuery dataset specified by `BQ_DATASET_STAGING` environment variable
 
 **Purpose**: Cleaned and type-cast views on raw data. No business logic or aggregations.
@@ -280,18 +294,19 @@ Location: BigQuery dataset specified by `BQ_DATASET_STAGING` environment variabl
 
 **Source**: `orders_raw`
 
-| Column Name | Data Type | Nullable | Description | Transformation | Example |
-|------------|-----------|----------|-------------|----------------|---------|
-| `order_id` | STRING | No | Unique order identifier | Pass-through | `e481f51cbdc54678b7cc49136f2d6af7` |
-| `customer_id` | STRING | No | Foreign key to customer | Pass-through | `9ef432eb6251297304e76186b10a928d` |
-| `order_status` | STRING | No | Order status code | Pass-through, validated | `delivered` |
-| `order_purchase_timestamp` | TIMESTAMP | Yes | Order placement time | CAST to TIMESTAMP | `2017-10-02 10:56:33 UTC` |
-| `order_approved_at` | TIMESTAMP | Yes | Payment approval time | CAST to TIMESTAMP | `2017-10-02 11:07:15 UTC` |
-| `order_delivered_carrier_date` | TIMESTAMP | Yes | Handoff to logistics time | CAST to TIMESTAMP | `2017-10-04 19:55:00 UTC` |
-| `order_delivered_customer_date` | TIMESTAMP | Yes | Actual delivery time | CAST to TIMESTAMP | `2017-10-10 21:25:13 UTC` |
-| `order_estimated_delivery_date` | TIMESTAMP | Yes | Estimated delivery | CAST to TIMESTAMP | `2017-10-18 00:00:00 UTC` |
+| Column Name                     | Data Type | Nullable | Description               | Transformation          | Example                            |
+| ------------------------------- | --------- | -------- | ------------------------- | ----------------------- | ---------------------------------- |
+| `order_id`                      | STRING    | No       | Unique order identifier   | Pass-through            | `e481f51cbdc54678b7cc49136f2d6af7` |
+| `customer_id`                   | STRING    | No       | Foreign key to customer   | Pass-through            | `9ef432eb6251297304e76186b10a928d` |
+| `order_status`                  | STRING    | No       | Order status code         | Pass-through, validated | `delivered`                        |
+| `order_purchase_timestamp`      | TIMESTAMP | Yes      | Order placement time      | CAST to TIMESTAMP       | `2017-10-02 10:56:33 UTC`          |
+| `order_approved_at`             | TIMESTAMP | Yes      | Payment approval time     | CAST to TIMESTAMP       | `2017-10-02 11:07:15 UTC`          |
+| `order_delivered_carrier_date`  | TIMESTAMP | Yes      | Handoff to logistics time | CAST to TIMESTAMP       | `2017-10-04 19:55:00 UTC`          |
+| `order_delivered_customer_date` | TIMESTAMP | Yes      | Actual delivery time      | CAST to TIMESTAMP       | `2017-10-10 21:25:13 UTC`          |
+| `order_estimated_delivery_date` | TIMESTAMP | Yes      | Estimated delivery        | CAST to TIMESTAMP       | `2017-10-18 00:00:00 UTC`          |
 
 **Tests**:
+
 - ✓ `order_id` is unique and not null
 - ✓ `order_status` has accepted values: `delivered`, `shipped`, `canceled`, `unavailable`, `invoiced`, `processing`, `created`, `approved`
 
@@ -305,15 +320,16 @@ Location: BigQuery dataset specified by `BQ_DATASET_STAGING` environment variabl
 
 **Source**: `customers_raw`
 
-| Column Name | Data Type | Nullable | Description | Transformation | Example |
-|------------|-----------|----------|-------------|----------------|---------|
-| `customer_id` | STRING | No | Order-level customer ID | Pass-through | `06b8999e2fba1a1fbc88172c00ba8bc7` |
-| `customer_unique_id` | STRING | No | True customer ID | Pass-through | `861eff4711a542e4b93843c6dd7febb0` |
-| `customer_zip_code_prefix` | STRING | Yes | 5-digit ZIP code | Pass-through | `14409` |
-| `customer_city` | STRING | Yes | City name | Pass-through | `sao paulo` |
-| `customer_state` | STRING | Yes | State code | Pass-through | `SP` |
+| Column Name                | Data Type | Nullable | Description             | Transformation | Example                            |
+| -------------------------- | --------- | -------- | ----------------------- | -------------- | ---------------------------------- |
+| `customer_id`              | STRING    | No       | Order-level customer ID | Pass-through   | `06b8999e2fba1a1fbc88172c00ba8bc7` |
+| `customer_unique_id`       | STRING    | No       | True customer ID        | Pass-through   | `861eff4711a542e4b93843c6dd7febb0` |
+| `customer_zip_code_prefix` | STRING    | Yes      | 5-digit ZIP code        | Pass-through   | `14409`                            |
+| `customer_city`            | STRING    | Yes      | City name               | Pass-through   | `sao paulo`                        |
+| `customer_state`           | STRING    | Yes      | State code              | Pass-through   | `SP`                               |
 
 **Tests**:
+
 - ✓ `customer_id` is unique and not null
 
 ---
@@ -326,22 +342,24 @@ Location: BigQuery dataset specified by `BQ_DATASET_STAGING` environment variabl
 
 **Source**: `products_raw`
 
-| Column Name | Data Type | Nullable | Description | Transformation | Example |
-|------------|-----------|----------|-------------|----------------|---------|
-| `product_id` | STRING | No | Unique product ID | Pass-through | `1e9e8ef04dbcff4541ed26657ea517e5` |
-| `product_category_name` | STRING | Yes | Category in Portuguese | Pass-through | `beleza_saude` |
-| `product_name_length` | INT64 | Yes | Name character count | CAST to INT64, fix typo | `58` |
-| `product_description_length` | INT64 | Yes | Description character count | CAST to INT64, fix typo | `394` |
-| `product_photos_qty` | INT64 | Yes | Number of photos | CAST to INT64 | `4` |
-| `product_weight_g` | FLOAT64 | Yes | Weight in grams | CAST to FLOAT64 | `700.0` |
-| `product_length_cm` | FLOAT64 | Yes | Package length | CAST to FLOAT64 | `30.0` |
-| `product_height_cm` | FLOAT64 | Yes | Package height | CAST to FLOAT64 | `10.0` |
-| `product_width_cm` | FLOAT64 | Yes | Package width | CAST to FLOAT64 | `20.0` |
+| Column Name                  | Data Type | Nullable | Description                 | Transformation          | Example                            |
+| ---------------------------- | --------- | -------- | --------------------------- | ----------------------- | ---------------------------------- |
+| `product_id`                 | STRING    | No       | Unique product ID           | Pass-through            | `1e9e8ef04dbcff4541ed26657ea517e5` |
+| `product_category_name`      | STRING    | Yes      | Category in Portuguese      | Pass-through            | `beleza_saude`                     |
+| `product_name_length`        | INT64     | Yes      | Name character count        | CAST to INT64, fix typo | `58`                               |
+| `product_description_length` | INT64     | Yes      | Description character count | CAST to INT64, fix typo | `394`                              |
+| `product_photos_qty`         | INT64     | Yes      | Number of photos            | CAST to INT64           | `4`                                |
+| `product_weight_g`           | FLOAT64   | Yes      | Weight in grams             | CAST to FLOAT64         | `700.0`                            |
+| `product_length_cm`          | FLOAT64   | Yes      | Package length              | CAST to FLOAT64         | `30.0`                             |
+| `product_height_cm`          | FLOAT64   | Yes      | Package height              | CAST to FLOAT64         | `10.0`                             |
+| `product_width_cm`           | FLOAT64   | Yes      | Package width               | CAST to FLOAT64         | `20.0`                             |
 
 **Tests**:
+
 - ✓ `product_id` is unique and not null
 
 **Notes**:
+
 - Fixed typo: `product_name_lenght` → `product_name_length`
 - Fixed typo: `product_description_lenght` → `product_description_length`
 
@@ -355,17 +373,18 @@ Location: BigQuery dataset specified by `BQ_DATASET_STAGING` environment variabl
 
 **Source**: `order_items_raw`
 
-| Column Name | Data Type | Nullable | Description | Transformation | Example |
-|------------|-----------|----------|-------------|----------------|---------|
-| `order_id` | STRING | No | Foreign key to order | Pass-through | `00010242fe8c5a6d1ba2dd792cb16214` |
-| `order_item_id` | INT64 | No | Item sequence number | CAST to INT64 | `1` |
-| `product_id` | STRING | No | Foreign key to product | Pass-through | `4244733e06e7ecb4970a6e2683c13e61` |
-| `seller_id` | STRING | No | Foreign key to seller | Pass-through | `48436dade18ac8b2bce089ec2a041202` |
-| `shipping_limit_date` | TIMESTAMP | Yes | Seller deadline | CAST to TIMESTAMP | `2017-09-19 09:45:35 UTC` |
-| `price` | FLOAT64 | Yes | Item price in BRL | CAST to FLOAT64 | `58.90` |
-| `freight_value` | FLOAT64 | Yes | Shipping cost | CAST to FLOAT64 | `13.29` |
+| Column Name           | Data Type | Nullable | Description            | Transformation    | Example                            |
+| --------------------- | --------- | -------- | ---------------------- | ----------------- | ---------------------------------- |
+| `order_id`            | STRING    | No       | Foreign key to order   | Pass-through      | `00010242fe8c5a6d1ba2dd792cb16214` |
+| `order_item_id`       | INT64     | No       | Item sequence number   | CAST to INT64     | `1`                                |
+| `product_id`          | STRING    | No       | Foreign key to product | Pass-through      | `4244733e06e7ecb4970a6e2683c13e61` |
+| `seller_id`           | STRING    | No       | Foreign key to seller  | Pass-through      | `48436dade18ac8b2bce089ec2a041202` |
+| `shipping_limit_date` | TIMESTAMP | Yes      | Seller deadline        | CAST to TIMESTAMP | `2017-09-19 09:45:35 UTC`          |
+| `price`               | FLOAT64   | Yes      | Item price in BRL      | CAST to FLOAT64   | `58.90`                            |
+| `freight_value`       | FLOAT64   | Yes      | Shipping cost          | CAST to FLOAT64   | `13.29`                            |
 
 **Tests**:
+
 - ✓ Composite key (`order_id` + `order_item_id`) is unique
 - ✓ Foreign key relationships validated
 
@@ -379,15 +398,16 @@ Location: BigQuery dataset specified by `BQ_DATASET_STAGING` environment variabl
 
 **Source**: `order_payments_raw`
 
-| Column Name | Data Type | Nullable | Description | Transformation | Example |
-|------------|-----------|----------|-------------|----------------|---------|
-| `order_id` | STRING | No | Foreign key to order | Pass-through | `b81ef226f3fe1789b1e8b2acac839d17` |
-| `payment_sequential` | INTEGER | No | Payment sequence | Pass-through | `1` |
-| `payment_type` | STRING | No | Payment method | Pass-through | `credit_card` |
-| `payment_installments` | INTEGER | Yes | Installment count | Pass-through | `10` |
-| `payment_value` | FLOAT64 | Yes | Payment amount | CAST to FLOAT64 | `141.80` |
+| Column Name            | Data Type | Nullable | Description          | Transformation  | Example                            |
+| ---------------------- | --------- | -------- | -------------------- | --------------- | ---------------------------------- |
+| `order_id`             | STRING    | No       | Foreign key to order | Pass-through    | `b81ef226f3fe1789b1e8b2acac839d17` |
+| `payment_sequential`   | INTEGER   | No       | Payment sequence     | Pass-through    | `1`                                |
+| `payment_type`         | STRING    | No       | Payment method       | Pass-through    | `credit_card`                      |
+| `payment_installments` | INTEGER   | Yes      | Installment count    | Pass-through    | `10`                               |
+| `payment_value`        | FLOAT64   | Yes      | Payment amount       | CAST to FLOAT64 | `141.80`                           |
 
 **Tests**:
+
 - ✓ Composite key (`order_id` + `payment_sequential`) is unique
 
 ---
@@ -400,14 +420,15 @@ Location: BigQuery dataset specified by `BQ_DATASET_STAGING` environment variabl
 
 **Source**: `sellers_raw`
 
-| Column Name | Data Type | Nullable | Description | Transformation | Example |
-|------------|-----------|----------|-------------|----------------|---------|
-| `seller_id` | STRING | No | Unique seller ID | Pass-through | `3442f8959a84dea7ee197c632cb2df15` |
-| `seller_zip_code_prefix` | STRING | Yes | 5-digit ZIP | Pass-through | `13023` |
-| `seller_city` | STRING | Yes | City name | Pass-through | `campinas` |
-| `seller_state` | STRING | Yes | State code | Pass-through | `SP` |
+| Column Name              | Data Type | Nullable | Description      | Transformation | Example                            |
+| ------------------------ | --------- | -------- | ---------------- | -------------- | ---------------------------------- |
+| `seller_id`              | STRING    | No       | Unique seller ID | Pass-through   | `3442f8959a84dea7ee197c632cb2df15` |
+| `seller_zip_code_prefix` | STRING    | Yes      | 5-digit ZIP      | Pass-through   | `13023`                            |
+| `seller_city`            | STRING    | Yes      | City name        | Pass-through   | `campinas`                         |
+| `seller_state`           | STRING    | Yes      | State code       | Pass-through   | `SP`                               |
 
 **Tests**:
+
 - ✓ `seller_id` is unique and not null
 
 ---
@@ -420,21 +441,22 @@ Location: BigQuery dataset specified by `BQ_DATASET_STAGING` environment variabl
 
 **Source**: `order_reviews_raw`
 
-| Column Name | Data Type | Nullable | Description | Transformation | Example |
-|------------|-----------|----------|-------------|----------------|---------|
-| `review_id` | STRING | No | Unique review ID | Pass-through | `7bc2406110b926393aa56f80a40eba40` |
-| `order_id` | STRING | No | Foreign key to order | Pass-through | `73fc7af87114b39712e6da79b0a377eb` |
-| `review_score` | INT64 | Yes | Rating 1-5 | CAST to INT64 | `4` |
-| `review_comment_title` | STRING | Yes | Comment title | Pass-through | `Satisfeito` |
-| `review_comment_message` | STRING | Yes | Comment text | Pass-through | `Entrega rápida...` |
-| `review_creation_date` | TIMESTAMP | Yes | Review date | CAST to TIMESTAMP | `2018-01-18 00:00:00 UTC` |
-| `review_answer_timestamp` | TIMESTAMP | Yes | Seller response time | CAST to TIMESTAMP | `2018-01-18 21:46:59 UTC` |
+| Column Name               | Data Type | Nullable | Description          | Transformation    | Example                            |
+| ------------------------- | --------- | -------- | -------------------- | ----------------- | ---------------------------------- |
+| `review_id`               | STRING    | No       | Unique review ID     | Pass-through      | `7bc2406110b926393aa56f80a40eba40` |
+| `order_id`                | STRING    | No       | Foreign key to order | Pass-through      | `73fc7af87114b39712e6da79b0a377eb` |
+| `review_score`            | INT64     | Yes      | Rating 1-5           | CAST to INT64     | `4`                                |
+| `review_comment_title`    | STRING    | Yes      | Comment title        | Pass-through      | `Satisfeito`                       |
+| `review_comment_message`  | STRING    | Yes      | Comment text         | Pass-through      | `Entrega rápida...`                |
+| `review_creation_date`    | TIMESTAMP | Yes      | Review date          | CAST to TIMESTAMP | `2018-01-18 00:00:00 UTC`          |
+| `review_answer_timestamp` | TIMESTAMP | Yes      | Seller response time | CAST to TIMESTAMP | `2018-01-18 21:46:59 UTC`          |
 
 ---
 
 ## Warehouse Layer - Dimensions
 
 ### Dataset: `dev_warehouse_warehouse`
+
 Location: BigQuery dataset specified by `BQ_DATASET_WAREHOUSE` environment variable
 
 **Purpose**: Business-ready dimension tables with derived attributes and aggregations
@@ -457,20 +479,21 @@ Location: BigQuery dataset specified by `BQ_DATASET_WAREHOUSE` environment varia
 
 **Row Count**: ~96,096 customers
 
-| Column Name | Data Type | Nullable | Description | Derivation | Example |
-|------------|-----------|----------|-------------|------------|---------|
-| `customer_id` | STRING | No | **Primary Key** - Order-level customer ID | From stg_customers | `06b8999e2fba1a1fbc88172c00ba8bc7` |
-| `customer_unique_id` | STRING | No | True customer identifier | From stg_customers | `861eff4711a542e4b93843c6dd7febb0` |
-| `customer_city` | STRING | Yes | Customer city | From stg_customers | `sao paulo` |
-| `customer_state` | STRING | Yes | Customer state | From stg_customers | `SP` |
-| `total_orders` | INT64 | No | Lifetime order count | COUNT(orders) | `3` |
-| `first_order_date` | TIMESTAMP | Yes | Date of first purchase | MIN(order_purchase_timestamp) | `2017-01-15 10:23:45 UTC` |
-| `last_order_date` | TIMESTAMP | Yes | Date of most recent purchase | MAX(order_purchase_timestamp) | `2018-03-22 14:56:12 UTC` |
-| `customer_segment` | STRING | No | Loyalty segment | Business logic (see below) | `Loyal`, `Repeat`, `One-time` |
+| Column Name          | Data Type | Nullable | Description                               | Derivation                    | Example                            |
+| -------------------- | --------- | -------- | ----------------------------------------- | ----------------------------- | ---------------------------------- |
+| `customer_id`        | STRING    | No       | **Primary Key** - Order-level customer ID | From stg_customers            | `06b8999e2fba1a1fbc88172c00ba8bc7` |
+| `customer_unique_id` | STRING    | No       | True customer identifier                  | From stg_customers            | `861eff4711a542e4b93843c6dd7febb0` |
+| `customer_city`      | STRING    | Yes      | Customer city                             | From stg_customers            | `sao paulo`                        |
+| `customer_state`     | STRING    | Yes      | Customer state                            | From stg_customers            | `SP`                               |
+| `total_orders`       | INT64     | No       | Lifetime order count                      | COUNT(orders)                 | `3`                                |
+| `first_order_date`   | TIMESTAMP | Yes      | Date of first purchase                    | MIN(order_purchase_timestamp) | `2017-01-15 10:23:45 UTC`          |
+| `last_order_date`    | TIMESTAMP | Yes      | Date of most recent purchase              | MAX(order_purchase_timestamp) | `2018-03-22 14:56:12 UTC`          |
+| `customer_segment`   | STRING    | No       | Loyalty segment                           | Business logic (see below)    | `Loyal`, `Repeat`, `One-time`      |
 
 **Business Logic**:
 
 **Customer Segmentation Rules**:
+
 ```sql
 CASE
     WHEN total_orders >= 5 THEN 'Loyal'      -- 5+ orders
@@ -480,6 +503,7 @@ END
 ```
 
 **Tests**:
+
 - ✓ `customer_id` is unique and not null
 - ✓ `total_orders` >= 0
 - ✓ `customer_segment` has accepted values: `Loyal`, `Repeat`, `One-time`
@@ -500,24 +524,25 @@ END
 
 **Row Count**: ~32,951 products
 
-| Column Name | Data Type | Nullable | Description | Derivation | Example |
-|------------|-----------|----------|-------------|------------|---------|
-| `product_id` | STRING | No | **Primary Key** - Unique product ID | From stg_products | `1e9e8ef04dbcff4541ed26657ea517e5` |
-| `product_category_name` | STRING | Yes | Category (Portuguese) | From stg_products | `beleza_saude` |
-| `product_name_length` | INT64 | Yes | Name character count | From stg_products | `58` |
-| `product_description_length` | INT64 | Yes | Description character count | From stg_products | `394` |
-| `product_photos_qty` | INT64 | Yes | Photo count | From stg_products | `4` |
-| `product_weight_g` | FLOAT64 | Yes | Weight in grams | From stg_products | `700.0` |
-| `product_length_cm` | FLOAT64 | Yes | Package length | From stg_products | `30.0` |
-| `product_height_cm` | FLOAT64 | Yes | Package height | From stg_products | `10.0` |
-| `product_width_cm` | FLOAT64 | Yes | Package width | From stg_products | `20.0` |
-| `total_orders` | INT64 | No | Times ordered | COUNT(DISTINCT order_id) | `145` |
-| `total_revenue` | FLOAT64 | No | Lifetime revenue (BRL) | SUM(price) | `8,542.50` |
-| `sales_tier` | STRING | No | Performance tier | Business logic (see below) | `Best Seller`, `Popular`, `Standard` |
+| Column Name                  | Data Type | Nullable | Description                         | Derivation                 | Example                              |
+| ---------------------------- | --------- | -------- | ----------------------------------- | -------------------------- | ------------------------------------ |
+| `product_id`                 | STRING    | No       | **Primary Key** - Unique product ID | From stg_products          | `1e9e8ef04dbcff4541ed26657ea517e5`   |
+| `product_category_name`      | STRING    | Yes      | Category (Portuguese)               | From stg_products          | `beleza_saude`                       |
+| `product_name_length`        | INT64     | Yes      | Name character count                | From stg_products          | `58`                                 |
+| `product_description_length` | INT64     | Yes      | Description character count         | From stg_products          | `394`                                |
+| `product_photos_qty`         | INT64     | Yes      | Photo count                         | From stg_products          | `4`                                  |
+| `product_weight_g`           | FLOAT64   | Yes      | Weight in grams                     | From stg_products          | `700.0`                              |
+| `product_length_cm`          | FLOAT64   | Yes      | Package length                      | From stg_products          | `30.0`                               |
+| `product_height_cm`          | FLOAT64   | Yes      | Package height                      | From stg_products          | `10.0`                               |
+| `product_width_cm`           | FLOAT64   | Yes      | Package width                       | From stg_products          | `20.0`                               |
+| `total_orders`               | INT64     | No       | Times ordered                       | COUNT(DISTINCT order_id)   | `145`                                |
+| `total_revenue`              | FLOAT64   | No       | Lifetime revenue (BRL)              | SUM(price)                 | `8,542.50`                           |
+| `sales_tier`                 | STRING    | No       | Performance tier                    | Business logic (see below) | `Best Seller`, `Popular`, `Standard` |
 
 **Business Logic**:
 
 **Sales Tier Rules**:
+
 ```sql
 CASE
     WHEN total_orders >= 100 THEN 'Best Seller'  -- Top sellers
@@ -527,6 +552,7 @@ END
 ```
 
 **Tests**:
+
 - ✓ `product_id` is unique and not null
 - ✓ `total_orders` >= 0
 - ✓ `total_revenue` >= 0
@@ -548,19 +574,20 @@ END
 
 **Row Count**: ~3,095 sellers
 
-| Column Name | Data Type | Nullable | Description | Derivation | Example |
-|------------|-----------|----------|-------------|------------|---------|
-| `seller_id` | STRING | No | **Primary Key** - Unique seller ID | From stg_sellers | `3442f8959a84dea7ee197c632cb2df15` |
-| `seller_city` | STRING | Yes | Seller city | From stg_sellers | `campinas` |
-| `seller_state` | STRING | Yes | Seller state | From stg_sellers | `SP` |
-| `total_orders` | INT64 | No | Orders fulfilled | COUNT(DISTINCT order_id) | `87` |
-| `total_items_sold` | INT64 | No | Items sold count | COUNT(*) | `132` |
-| `total_revenue` | FLOAT64 | No | Lifetime revenue (BRL) | SUM(price) | `12,456.78` |
-| `seller_tier` | STRING | No | Volume tier | Business logic (see below) | `High Volume`, `Medium Volume`, `Low Volume` |
+| Column Name        | Data Type | Nullable | Description                        | Derivation                 | Example                                      |
+| ------------------ | --------- | -------- | ---------------------------------- | -------------------------- | -------------------------------------------- |
+| `seller_id`        | STRING    | No       | **Primary Key** - Unique seller ID | From stg_sellers           | `3442f8959a84dea7ee197c632cb2df15`           |
+| `seller_city`      | STRING    | Yes      | Seller city                        | From stg_sellers           | `campinas`                                   |
+| `seller_state`     | STRING    | Yes      | Seller state                       | From stg_sellers           | `SP`                                         |
+| `total_orders`     | INT64     | No       | Orders fulfilled                   | COUNT(DISTINCT order_id)   | `87`                                         |
+| `total_items_sold` | INT64     | No       | Items sold count                   | COUNT(\*)                  | `132`                                        |
+| `total_revenue`    | FLOAT64   | No       | Lifetime revenue (BRL)             | SUM(price)                 | `12,456.78`                                  |
+| `seller_tier`      | STRING    | No       | Volume tier                        | Business logic (see below) | `High Volume`, `Medium Volume`, `Low Volume` |
 
 **Business Logic**:
 
 **Seller Tier Rules**:
+
 ```sql
 CASE
     WHEN total_items_sold >= 100 THEN 'High Volume'    -- High-volume sellers
@@ -570,6 +597,7 @@ END
 ```
 
 **Tests**:
+
 - ✓ `seller_id` is unique and not null
 - ✓ `total_items_sold` >= 0
 - ✓ `total_revenue` >= 0
@@ -591,25 +619,27 @@ END
 
 **Row Count**: 1,461 days (2016-01-01 to 2020-01-01)
 
-| Column Name | Data Type | Nullable | Description | Derivation | Example |
-|------------|-----------|----------|-------------|------------|---------|
-| `date_day` | DATE | No | **Primary Key** - Calendar date | Generated date spine | `2017-10-15` |
-| `year` | INT64 | No | Year | EXTRACT(year) | `2017` |
-| `quarter` | INT64 | No | Quarter (1-4) | EXTRACT(quarter) | `4` |
-| `month` | INT64 | No | Month (1-12) | EXTRACT(month) | `10` |
-| `week_of_year` | INT64 | No | Week number (1-53) | EXTRACT(week) | `42` |
-| `day_of_week` | INT64 | No | Day of week (1=Sun, 7=Sat) | EXTRACT(dayofweek) | `7` |
-| `month_name` | STRING | No | Month name | FORMAT_DATE('%B') | `October` |
-| `day_name` | STRING | No | Day name | FORMAT_DATE('%A') | `Sunday` |
-| `is_weekend` | BOOLEAN | No | Weekend flag | day_of_week IN (1, 7) | `true` |
+| Column Name    | Data Type | Nullable | Description                     | Derivation            | Example      |
+| -------------- | --------- | -------- | ------------------------------- | --------------------- | ------------ |
+| `date_day`     | DATE      | No       | **Primary Key** - Calendar date | Generated date spine  | `2017-10-15` |
+| `year`         | INT64     | No       | Year                            | EXTRACT(year)         | `2017`       |
+| `quarter`      | INT64     | No       | Quarter (1-4)                   | EXTRACT(quarter)      | `4`          |
+| `month`        | INT64     | No       | Month (1-12)                    | EXTRACT(month)        | `10`         |
+| `week_of_year` | INT64     | No       | Week number (1-53)              | EXTRACT(week)         | `42`         |
+| `day_of_week`  | INT64     | No       | Day of week (1=Sun, 7=Sat)      | EXTRACT(dayofweek)    | `7`          |
+| `month_name`   | STRING    | No       | Month name                      | FORMAT_DATE('%B')     | `October`    |
+| `day_name`     | STRING    | No       | Day name                        | FORMAT_DATE('%A')     | `Sunday`     |
+| `is_weekend`   | BOOLEAN   | No       | Weekend flag                    | day_of_week IN (1, 7) | `true`       |
 
 **Tests**:
+
 - ✓ `date_day` is unique and not null
 - ✓ Continuous date range with no gaps
 
 **Usage**: Join to facts on date columns for time-series analysis and reporting
 
 **Future Enhancements**:
+
 - Add fiscal calendar (if different from calendar year)
 - Add Brazilian holidays flag
 - Add business day calculations
@@ -646,27 +676,28 @@ END
 
 **Clustering**: `customer_id`, `order_status`
 
-| Column Name | Data Type | Nullable | Description | Derivation | Example |
-|------------|-----------|----------|-------------|------------|---------|
-| `order_id` | STRING | No | **Primary Key** - Unique order ID | From stg_orders | `e481f51cbdc54678b7cc49136f2d6af7` |
-| `customer_id` | STRING | No | **Foreign Key** to dim_customer | From stg_orders | `9ef432eb6251297304e76186b10a928d` |
-| `order_status` | STRING | No | Order status | From stg_orders | `delivered` |
-| `order_purchase_date` | DATE | No | Purchase date (for partitioning) | DATE(order_purchase_timestamp) | `2017-10-02` |
-| `order_purchase_timestamp` | TIMESTAMP | Yes | Purchase timestamp | From stg_orders | `2017-10-02 10:56:33 UTC` |
-| `order_approved_at` | TIMESTAMP | Yes | Approval timestamp | From stg_orders | `2017-10-02 11:07:15 UTC` |
-| `order_delivered_customer_date` | TIMESTAMP | Yes | Delivery timestamp | From stg_orders | `2017-10-10 21:25:13 UTC` |
-| `order_estimated_delivery_date` | TIMESTAMP | Yes | Estimated delivery | From stg_orders | `2017-10-18 00:00:00 UTC` |
-| `total_products` | INT64 | No | Distinct product count | COUNT(DISTINCT product_id) | `3` |
-| `total_order_value` | FLOAT64 | No | Order subtotal (BRL) | SUM(price) from order_items | `189.90` |
-| `total_freight_value` | FLOAT64 | No | Total shipping cost (BRL) | SUM(freight_value) from order_items | `23.45` |
-| `total_payment_value` | FLOAT64 | No | Total paid (BRL) | SUM(payment_value) from payments | `213.35` |
-| `delivery_days` | INT64 | Yes | Actual delivery time | DAYS(delivered_date - purchase_date) | `8` |
-| `delivery_delay_days` | INT64 | Yes | Delay vs estimate | DAYS(delivered_date - estimated_date) | `-8` (8 days early) |
-| `is_on_time_delivery` | BOOLEAN | No | On-time flag | delivered_date <= estimated_date | `true` |
+| Column Name                     | Data Type | Nullable | Description                       | Derivation                            | Example                            |
+| ------------------------------- | --------- | -------- | --------------------------------- | ------------------------------------- | ---------------------------------- |
+| `order_id`                      | STRING    | No       | **Primary Key** - Unique order ID | From stg_orders                       | `e481f51cbdc54678b7cc49136f2d6af7` |
+| `customer_id`                   | STRING    | No       | **Foreign Key** to dim_customer   | From stg_orders                       | `9ef432eb6251297304e76186b10a928d` |
+| `order_status`                  | STRING    | No       | Order status                      | From stg_orders                       | `delivered`                        |
+| `order_purchase_date`           | DATE      | No       | Purchase date (for partitioning)  | DATE(order_purchase_timestamp)        | `2017-10-02`                       |
+| `order_purchase_timestamp`      | TIMESTAMP | Yes      | Purchase timestamp                | From stg_orders                       | `2017-10-02 10:56:33 UTC`          |
+| `order_approved_at`             | TIMESTAMP | Yes      | Approval timestamp                | From stg_orders                       | `2017-10-02 11:07:15 UTC`          |
+| `order_delivered_customer_date` | TIMESTAMP | Yes      | Delivery timestamp                | From stg_orders                       | `2017-10-10 21:25:13 UTC`          |
+| `order_estimated_delivery_date` | TIMESTAMP | Yes      | Estimated delivery                | From stg_orders                       | `2017-10-18 00:00:00 UTC`          |
+| `total_products`                | INT64     | No       | Distinct product count            | COUNT(DISTINCT product_id)            | `3`                                |
+| `total_order_value`             | FLOAT64   | No       | Order subtotal (BRL)              | SUM(price) from order_items           | `189.90`                           |
+| `total_freight_value`           | FLOAT64   | No       | Total shipping cost (BRL)         | SUM(freight_value) from order_items   | `23.45`                            |
+| `total_payment_value`           | FLOAT64   | No       | Total paid (BRL)                  | SUM(payment_value) from payments      | `213.35`                           |
+| `delivery_days`                 | INT64     | Yes      | Actual delivery time              | DAYS(delivered_date - purchase_date)  | `8`                                |
+| `delivery_delay_days`           | INT64     | Yes      | Delay vs estimate                 | DAYS(delivered_date - estimated_date) | `-8` (8 days early)                |
+| `is_on_time_delivery`           | BOOLEAN   | No       | On-time flag                      | delivered_date <= estimated_date      | `true`                             |
 
 **Business Logic**:
 
 **Metrics Calculation**:
+
 - `total_order_value` = SUM of all item prices (excludes freight)
 - `total_freight_value` = SUM of all item freight costs
 - `total_payment_value` = Should equal (total_order_value + total_freight_value)
@@ -675,11 +706,13 @@ END
 - `is_on_time_delivery` = TRUE if delivered on or before estimated date
 
 **Incremental Logic**:
+
 ```sql
 WHERE order_purchase_timestamp > (SELECT MAX(order_purchase_timestamp) FROM {{ this }})
 ```
 
 **Tests**:
+
 - ✓ `order_id` is unique and not null
 - ✓ `customer_id` has valid FK relationship to dim_customer
 - ✓ `total_order_value` >= 0
@@ -688,11 +721,13 @@ WHERE order_purchase_timestamp > (SELECT MAX(order_purchase_timestamp) FROM {{ t
 **Usage**: Primary fact for order-level analysis, customer behavior, delivery performance
 
 **Query Performance**:
+
 - **Partitioning** on `order_purchase_date` enables fast date range queries
 - **Clustering** on `customer_id` optimizes customer analysis queries
 - **Clustering** on `order_status` optimizes status filtering
 
 **Example Query**:
+
 ```sql
 -- Monthly delivered orders
 SELECT
@@ -726,36 +761,40 @@ ORDER BY month;
 
 **Clustering**: `product_id`, `seller_id`
 
-| Column Name | Data Type | Nullable | Description | Derivation | Example |
-|------------|-----------|----------|-------------|------------|---------|
-| `order_item_key` | STRING | No | **Primary Key** - Surrogate key | MD5(order_id + order_item_id) | `a3f4b2c1...` |
-| `order_id` | STRING | No | **Foreign Key** to fact_orders | From stg_order_items | `00010242fe8c5a6d1ba2dd792cb16214` |
-| `order_item_id` | INT64 | No | Item sequence number | From stg_order_items | `1` |
-| `product_id` | STRING | No | **Foreign Key** to dim_product | From stg_order_items | `4244733e06e7ecb4970a6e2683c13e61` |
-| `seller_id` | STRING | No | **Foreign Key** to dim_seller | From stg_order_items | `48436dade18ac8b2bce089ec2a041202` |
-| `customer_id` | STRING | No | **Foreign Key** to dim_customer | From stg_orders (via order_id) | `9ef432eb6251297304e76186b10a928d` |
-| `order_status` | STRING | No | Order status | From stg_orders (via order_id) | `delivered` |
-| `shipping_limit_date` | TIMESTAMP | Yes | Seller deadline | From stg_order_items | `2017-09-19 09:45:35 UTC` |
-| `price` | FLOAT64 | Yes | Item price (BRL) | From stg_order_items | `58.90` |
-| `freight_value` | FLOAT64 | Yes | Item shipping cost (BRL) | From stg_order_items | `13.29` |
-| `total_item_value` | FLOAT64 | No | Item total (BRL) | price + freight_value | `72.19` |
+| Column Name           | Data Type | Nullable | Description                     | Derivation                     | Example                            |
+| --------------------- | --------- | -------- | ------------------------------- | ------------------------------ | ---------------------------------- |
+| `order_item_key`      | STRING    | No       | **Primary Key** - Surrogate key | MD5(order_id + order_item_id)  | `a3f4b2c1...`                      |
+| `order_id`            | STRING    | No       | **Foreign Key** to fact_orders  | From stg_order_items           | `00010242fe8c5a6d1ba2dd792cb16214` |
+| `order_item_id`       | INT64     | No       | Item sequence number            | From stg_order_items           | `1`                                |
+| `product_id`          | STRING    | No       | **Foreign Key** to dim_product  | From stg_order_items           | `4244733e06e7ecb4970a6e2683c13e61` |
+| `seller_id`           | STRING    | No       | **Foreign Key** to dim_seller   | From stg_order_items           | `48436dade18ac8b2bce089ec2a041202` |
+| `customer_id`         | STRING    | No       | **Foreign Key** to dim_customer | From stg_orders (via order_id) | `9ef432eb6251297304e76186b10a928d` |
+| `order_status`        | STRING    | No       | Order status                    | From stg_orders (via order_id) | `delivered`                        |
+| `shipping_limit_date` | TIMESTAMP | Yes      | Seller deadline                 | From stg_order_items           | `2017-09-19 09:45:35 UTC`          |
+| `price`               | FLOAT64   | Yes      | Item price (BRL)                | From stg_order_items           | `58.90`                            |
+| `freight_value`       | FLOAT64   | Yes      | Item shipping cost (BRL)        | From stg_order_items           | `13.29`                            |
+| `total_item_value`    | FLOAT64   | No       | Item total (BRL)                | price + freight_value          | `72.19`                            |
 
 **Business Logic**:
 
 **Surrogate Key Generation**:
+
 ```sql
 MD5(CONCAT(order_id, '-', CAST(order_item_id AS STRING)))
 ```
 
 **Metrics**:
+
 - `total_item_value` = price + freight_value (full cost of item)
 
 **Incremental Logic**:
+
 ```sql
 WHERE shipping_limit_date > (SELECT MAX(shipping_limit_date) FROM {{ this }})
 ```
 
 **Tests**:
+
 - ✓ `order_item_key` is unique and not null
 - ✓ `order_id` has valid FK relationship to fact_orders
 - ✓ `product_id` has valid FK relationship to dim_product
@@ -765,11 +804,13 @@ WHERE shipping_limit_date > (SELECT MAX(shipping_limit_date) FROM {{ this }})
 **Usage**: Item-level analysis, product performance, seller analysis, basket analysis
 
 **Query Performance**:
+
 - **Partitioning** on `shipping_limit_date` enables fast date range queries
 - **Clustering** on `product_id` optimizes product analysis
 - **Clustering** on `seller_id` optimizes seller analysis
 
 **Example Query**:
+
 ```sql
 -- Top 10 products by revenue
 SELECT
@@ -792,7 +833,7 @@ LIMIT 10;
 
 ---
 
-## 23. _load_metadata
+## 23. \_load_metadata
 
 **Description**: Audit trail for all data loads to track idempotency
 
@@ -802,26 +843,28 @@ LIMIT 10;
 
 **Created By**: `bigquery_loader.py` ingestion script
 
-| Column Name | Data Type | Nullable | Description | Example |
-|------------|-----------|----------|-------------|---------|
-| `file_name` | STRING | No | Name of loaded CSV file | `olist_orders_dataset.csv` |
-| `file_path` | STRING | No | Full path to source file | `/path/to/data/raw/olist_orders_dataset.csv` |
-| `file_hash` | STRING | No | MD5 hash of file contents | `a3f4b2c1d5e6f7...` |
-| `table_name` | STRING | No | Target BigQuery table | `orders_raw` |
-| `row_count` | INT64 | No | Number of rows loaded | `99441` |
-| `load_timestamp` | TIMESTAMP | No | When load completed | `2024-01-15 10:23:45 UTC` |
-| `load_status` | STRING | No | Load result status | `SUCCESS`, `FAILED` |
-| `error_message` | STRING | Yes | Error details if failed | `NULL` or error text |
+| Column Name      | Data Type | Nullable | Description               | Example                                      |
+| ---------------- | --------- | -------- | ------------------------- | -------------------------------------------- |
+| `file_name`      | STRING    | No       | Name of loaded CSV file   | `olist_orders_dataset.csv`                   |
+| `file_path`      | STRING    | No       | Full path to source file  | `/path/to/data/raw/olist_orders_dataset.csv` |
+| `file_hash`      | STRING    | No       | MD5 hash of file contents | `a3f4b2c1d5e6f7...`                          |
+| `table_name`     | STRING    | No       | Target BigQuery table     | `orders_raw`                                 |
+| `row_count`      | INT64     | No       | Number of rows loaded     | `99441`                                      |
+| `load_timestamp` | TIMESTAMP | No       | When load completed       | `2024-01-15 10:23:45 UTC`                    |
+| `load_status`    | STRING    | No       | Load result status        | `SUCCESS`, `FAILED`                          |
+| `error_message`  | STRING    | Yes      | Error details if failed   | `NULL` or error text                         |
 
 **Business Logic**:
 
 **Idempotency Check**:
+
 1. Calculate MD5 hash of CSV file
 2. Check if hash exists in `_load_metadata`
 3. If exists: Skip load (already processed)
 4. If new: Load data and record metadata
 
 **Benefits**:
+
 - Safe to re-run ingestion scripts
 - Audit trail of all loads
 - Prevents data duplication
@@ -833,23 +876,25 @@ LIMIT 10;
 
 ### BigQuery Data Types Used
 
-| Data Type | Description | Example | Storage Size |
-|-----------|-------------|---------|--------------|
-| `STRING` | Variable-length text | `"São Paulo"` | Variable |
-| `INT64` | 64-bit integer | `12345` | 8 bytes |
-| `FLOAT64` | 64-bit floating point | `123.45` | 8 bytes |
-| `BOOLEAN` | True/false | `true`, `false` | 1 byte |
-| `DATE` | Calendar date | `2017-10-15` | 8 bytes |
-| `TIMESTAMP` | Date + time with timezone | `2017-10-15 10:23:45 UTC` | 8 bytes |
+| Data Type   | Description               | Example                   | Storage Size |
+| ----------- | ------------------------- | ------------------------- | ------------ |
+| `STRING`    | Variable-length text      | `"São Paulo"`             | Variable     |
+| `INT64`     | 64-bit integer            | `12345`                   | 8 bytes      |
+| `FLOAT64`   | 64-bit floating point     | `123.45`                  | 8 bytes      |
+| `BOOLEAN`   | True/false                | `true`, `false`           | 1 byte       |
+| `DATE`      | Calendar date             | `2017-10-15`              | 8 bytes      |
+| `TIMESTAMP` | Date + time with timezone | `2017-10-15 10:23:45 UTC` | 8 bytes      |
 
 ### Type Casting Rules
 
 **Raw → Staging**:
+
 - All timestamp strings → TIMESTAMP
 - Numeric strings → INT64 or FLOAT64
 - Everything else → STRING (pass-through)
 
 **Staging → Warehouse**:
+
 - Aggregations → INT64 (counts) or FLOAT64 (sums)
 - Derived flags → BOOLEAN
 - Date extraction → DATE
@@ -878,12 +923,14 @@ created → approved → processing → invoiced → shipped → delivered
 ### Data Quality Rules
 
 **Referential Integrity**:
+
 - Every `order_id` in facts must exist in `stg_orders`
 - Every `customer_id` in facts must exist in `dim_customer`
 - Every `product_id` in facts must exist in `dim_product`
 - Every `seller_id` in facts must exist in `dim_seller`
 
 **Business Logic Validations**:
+
 - Order amounts must be >= 0
 - Delivery days must be >= 0 (if not null)
 - Review scores must be 1-5
@@ -891,6 +938,7 @@ created → approved → processing → invoiced → shipped → delivered
 - Sales tiers must be: Best Seller, Popular, or Standard
 
 **Incremental Load Rules**:
+
 - Facts use merge strategy (upsert based on primary key)
 - Dimensions use full refresh (SCD Type 1 overwrite)
 - Load only records newer than MAX timestamp in target table
@@ -900,6 +948,7 @@ created → approved → processing → invoiced → shipped → delivered
 ## Column Naming Conventions
 
 ### Prefixes
+
 - `is_` = Boolean flag (e.g., `is_weekend`, `is_on_time_delivery`)
 - `total_` = Aggregated sum or count (e.g., `total_orders`, `total_revenue`)
 - `customer_` = Customer attribute
@@ -908,6 +957,7 @@ created → approved → processing → invoiced → shipped → delivered
 - `order_` = Order attribute
 
 ### Suffixes
+
 - `_id` = Identifier, usually foreign key
 - `_key` = Surrogate key (generated)
 - `_date` = Date only (no time)
@@ -1010,6 +1060,7 @@ ORDER BY revenue DESC;
 ### By Layer
 
 **Raw Layer (9 tables)**:
+
 1. orders_raw
 2. customers_raw
 3. products_raw
@@ -1020,27 +1071,13 @@ ORDER BY revenue DESC;
 8. geolocation_raw
 9. product_category_name_translation_raw
 
-**Staging Layer (7 views)**:
-10. stg_orders
-11. stg_customers
-12. stg_products
-13. stg_order_items
-14. stg_payments
-15. stg_sellers
-16. stg_reviews
+**Staging Layer (7 views)**: 10. stg_orders 11. stg_customers 12. stg_products 13. stg_order_items 14. stg_payments 15. stg_sellers 16. stg_reviews
 
-**Warehouse Dimensions (4 tables)**:
-17. dim_customer
-18. dim_product
-19. dim_seller
-20. dim_date
+**Warehouse Dimensions (4 tables)**: 17. dim_customer 18. dim_product 19. dim_seller 20. dim_date
 
-**Warehouse Facts (2 tables)**:
-21. fact_orders
-22. fact_order_items
+**Warehouse Facts (2 tables)**: 21. fact_orders 22. fact_order_items
 
-**Metadata (1 table)**:
-23. _load_metadata
+**Metadata (1 table)**: 23. \_load_metadata
 
 **Total**: 23 tables/views
 
@@ -1051,13 +1088,14 @@ ORDER BY revenue DESC;
 - **Version**: 1.0
 - **Last Updated**: 2024-01-15
 - **Project**: Brazilian E-Commerce Data Pipeline
-- **Team**: NTU DS3 Project Team
+- **Team**: Group 3 Project Team
 
 ---
 
 ## Feedback & Updates
 
 This data dictionary should be updated when:
+
 - New columns are added to existing tables
 - New tables/views are created
 - Business logic changes
