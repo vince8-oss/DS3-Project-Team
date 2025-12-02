@@ -25,7 +25,7 @@ graph TD
         Marts --> Dashboard[Looker Studio]
     end
 
-    Orchestration[GitHub Actions] --> Ingestion
+    Orchestration[Dagster] --> Ingestion
     Orchestration --> Warehouse
     Orchestration --> Quality
 ```

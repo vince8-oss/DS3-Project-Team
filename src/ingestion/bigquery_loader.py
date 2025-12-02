@@ -11,15 +11,29 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 def calculate_md5(file_path: str) -> str:
-    """Calculate MD5 hash of a file."""
+    """
+    Calculate MD5 hash of a file for deduplication tracking.
+
+    Args:
+        file_path: Path to the file to hash
+
+    Returns:
+        MD5 hash as hexadecimal string
+    """
     hash_md5 = hashlib.md5()
     with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
-def create_metadata_table_if_not_exists(client: bigquery.Client, dataset_id: str):
-    """Create _load_metadata table if it doesn't exist."""
+def create_metadata_table_if_not_exists(client: bigquery.Client, dataset_id: str) -> None:
+    """
+    Create _load_metadata table if it doesn't exist for tracking data loads.
+
+    Args:
+        client: Authenticated BigQuery client
+        dataset_id: Dataset ID where metadata table will be created
+    """
     table_id = f"{Config.GCP_PROJECT_ID}.{dataset_id}._load_metadata"
     schema = [
         bigquery.SchemaField("table_name", "STRING"),
@@ -38,16 +52,35 @@ def create_metadata_table_if_not_exists(client: bigquery.Client, dataset_id: str
         client.create_table(table)
 
 def is_file_already_loaded(client: bigquery.Client, dataset_id: str, table_name: str, file_hash: str) -> bool:
-    """Check if file was already loaded using MD5 hash."""
-    query = f"""
-    SELECT COUNT(*) as count
-    FROM `{Config.GCP_PROJECT_ID}.{dataset_id}._load_metadata`
-    WHERE table_name = '{table_name}'
-    AND file_hash = '{file_hash}'
-    AND load_status = 'success'
     """
+    Check if file was already loaded using MD5 hash to ensure idempotency.
+
+    Args:
+        client: Authenticated BigQuery client
+        dataset_id: Dataset ID to check
+        table_name: Table name to check
+        file_hash: MD5 hash of the file
+
+    Returns:
+        True if file was already loaded successfully, False otherwise
+    """
+    query = """
+    SELECT COUNT(*) as count
+    FROM `{project}.{dataset}._load_metadata`
+    WHERE table_name = @table_name
+    AND file_hash = @file_hash
+    AND load_status = 'success'
+    """.format(project=Config.GCP_PROJECT_ID, dataset=dataset_id)
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("table_name", "STRING", table_name),
+            bigquery.ScalarQueryParameter("file_hash", "STRING", file_hash),
+        ]
+    )
+
     try:
-        query_job = client.query(query)
+        query_job = client.query(query, job_config=job_config)
         results = query_job.result()
         for row in results:
             return row.count > 0
@@ -56,8 +89,19 @@ def is_file_already_loaded(client: bigquery.Client, dataset_id: str, table_name:
         return False
     return False
 
-def log_load_status(client: bigquery.Client, dataset_id: str, table_name: str, file_name: str, file_hash: str, status: str, row_count: int = 0):
-    """Log load status to metadata table."""
+def log_load_status(client: bigquery.Client, dataset_id: str, table_name: str, file_name: str, file_hash: str, status: str, row_count: int = 0) -> None:
+    """
+    Log load status to metadata table for tracking and auditing.
+
+    Args:
+        client: Authenticated BigQuery client
+        dataset_id: Dataset ID where metadata table exists
+        table_name: Name of the table that was loaded
+        file_name: Original filename
+        file_hash: MD5 hash of the file
+        status: Load status ('success' or 'failed')
+        row_count: Number of rows loaded (default: 0)
+    """
     table_id = f"{Config.GCP_PROJECT_ID}.{dataset_id}._load_metadata"
     rows_to_insert = [{
         "table_name": table_name,
@@ -72,9 +116,22 @@ def log_load_status(client: bigquery.Client, dataset_id: str, table_name: str, f
     if errors:
         logger.error(f"Failed to insert metadata: {errors}")
 
-def load_to_bigquery(source_dir: str):
+def load_to_bigquery(source_dir: str) -> None:
     """
-    Load CSV files from source directory to BigQuery.
+    Load CSV files from source directory to BigQuery with idempotent deduplication.
+
+    Args:
+        source_dir: Directory containing CSV files to load
+
+    Raises:
+        Exception: If BigQuery loading fails
+
+    Notes:
+        - Uses MD5 hashing to prevent duplicate loads
+        - Auto-detects schema from CSV files
+        - Creates dataset if it doesn't exist
+        - Logs all loads to _load_metadata table
+        - Uses WRITE_TRUNCATE mode (full refresh)
     """
     try:
         client = bigquery.Client(project=Config.GCP_PROJECT_ID)
