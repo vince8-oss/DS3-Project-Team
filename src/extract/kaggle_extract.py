@@ -1,8 +1,26 @@
 import os
 import shutil
 import glob
-from kaggle.api.kaggle_api_extended import KaggleApi
 from dotenv import load_dotenv
+
+# Fix for Kaggle SDK 1.7.x User-Agent header issue
+# Must be done before importing KaggleApi
+try:
+    from kagglesdk.kaggle_http_client import KaggleHttpClient
+
+    # Patch __init__ to ensure _user_agent is never None
+    original_init = KaggleHttpClient.__init__
+    def patched_init(self, env=None, verbose=False, username=None, password=None, api_token=None, user_agent="kaggle-python-client/1.7.4"):
+        # If user_agent is passed as None, replace it with a default
+        if user_agent is None:
+            user_agent = 'kaggle-python-client/1.7.4'
+        original_init(self, env=env, verbose=verbose, username=username, password=password, api_token=api_token, user_agent=user_agent)
+
+    KaggleHttpClient.__init__ = patched_init
+except (ImportError, AttributeError):
+    pass
+
+from kaggle.api.kaggle_api_extended import KaggleApi
 
 load_dotenv()
 
