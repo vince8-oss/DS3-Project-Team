@@ -137,18 +137,6 @@ This will:
 2. Download the `olistbr/brazilian-ecommerce` dataset
 3. Extract 9 CSV files to `data/raw/` directory
 
-**Output**:
-
-```
-Authenticating with Kaggle...
-Downloading dataset olistbr/brazilian-ecommerce...
-Download complete. Moving files...
-- Copied olist_sellers_dataset.csv to /path/to/data/raw
-- Copied product_category_name_translation.csv to /path/to/data/raw
-...
-Successfully extracted 9 files to /path/to/data/raw
-```
-
 ### Step 2: Load Data to BigQuery
 
 Load all CSV files into BigQuery using Meltano:
@@ -192,9 +180,13 @@ bq ls --project_id=YOUR_PROJECT_ID olist_raw
 # Count rows in a specific table
 bq query --project_id=YOUR_PROJECT_ID --use_legacy_sql=false \
   'SELECT
-    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID.olist_raw.raw_customers`) as customers,
-    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID.olist_raw.raw_orders`) as orders,
-    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID.olist_raw.raw_order_items`) as order_items'
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_customers`) as customers,
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_geolocation`) as geolocation,   
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_orders`) as orders,
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_order_items`) as order_items,
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_payments`) as payments,
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_products`) as products,
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_sellers`) as sellers'
 ```
 
 Expected row counts:
