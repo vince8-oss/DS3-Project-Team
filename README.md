@@ -100,14 +100,14 @@ KAGGLE_KEY=your-kaggle-api-key
 1.  Create and activate a virtual environment:
 
     ```bash
-    python -m venv .venv
-    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+      conda create -n ds3 python=3.11.14 -y
+      conda activate ds3
     ```
 
 2.  Install Python dependencies:
 
     ```bash
-    pip install -r requirements.txt
+    uv pip install -r requirements.txt
     ```
 
 3.  Install Meltano plugins:
