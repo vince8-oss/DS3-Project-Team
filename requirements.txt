@@ -1,6 +1,15 @@
+# Meltano and Singer ecosystem
+meltano>=3.0.0
+
+# Data extraction
 kaggle
+
+# Data processing
 pandas
-google-cloud-bigquery
-python-dotenv
 pyarrow
-meltano
+
+# Google Cloud
+google-cloud-bigquery
+
+# Configuration
+python-dotenv

@@ -1,11 +1,10 @@
-version: 1
+
 default_environment: dev
 project_id: olist_pipeline
 plugins:
   extractors:
   - name: tap-csv
     variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
     config:
       files:
         - entity: raw_customers
@@ -37,11 +36,11 @@ plugins:
           keys: [product_category_name]
   loaders:
   - name: target-bigquery
-    variant: z3
-    pip_url: z3-target-bigquery
+    variant: z3z1ma
     config:
-      project_id: $GCP_PROJECT
-      dataset_id: olist_raw
-      replication_method: FULL_TABLE
+      project: $GCP_PROJECT_ID
+      dataset: olist_raw
 environments:
 - name: dev
+  env:
+    GOOGLE_APPLICATION_CREDENTIALS: $GOOGLE_APPLICATION_CREDENTIALS

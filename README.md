@@ -40,11 +40,18 @@ GCP_PROJECT=your_gcp_project_id
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account.json
 ```
 
-### 2. Installation
-Install the required Python packages:
-```bash
-pip install -r requirements.txt
-```
+### 2. Installation (using uv)
+This project uses [uv](https://github.com/astral-sh/uv) for fast package management.
+
+1.  Create a virtual environment:
+    ```bash
+    uv venv
+    source .venv/bin/activate
+    ```
+2.  Install dependencies:
+    ```bash
+    uv pip install -r requirements.txt
+    ```
 
 ## Usage
 
@@ -70,19 +77,18 @@ meltano elt tap-csv target-bigquery --select raw_customers
 ```
 
 
-## Pending Implementation Steps (TODO)
+## Pending Implementation (TODO)
 
-- [ ] **Transformation (dbt)**:
-    - [ ] Initialize dbt project (`dbt init`).
-    - [ ] Configure `profiles.yml` for BigQuery.
-    - [ ] Create staging models for all raw tables.
-    - [ ] Create dimensional models (customers, products, unknown).
-    - [ ] Create fact models (orders, order_items).
-- [ ] **Orchestration**:
-    - [ ] Create an orchestration script (e.g., Python) to run Extraction -> Loading -> Transformation.
-    - [ ] (Optional) Integrate with Dagster.
-- [ ] **Data Quality**:
-    - [ ] Add dbt tests (unique, not_null, relationship).
-    - [ ] (Optional) Add Great Expectations for raw data validation.
-- [ ] **CI/CD**:
-    - [ ] Setup GitHub Actions for linting (sqlfluff) and testing.
+- **Transformation (dbt)**:
+    - Initialize dbt project (`dbt init`).
+    - Configure `profiles.yml` for BigQuery.
+    - Create staging models for all raw tables.
+    - Create dimensional models (customers, products, unknown).
+    - Create fact models (orders, order_items).
+- **Orchestration**:
+    - Create an orchestration script (e.g., Python) to run Extraction -> Loading -> Transformation.
+    - (Optional) Integrate with Dagster.
+- **Data Quality**:
+    - Add dbt tests (unique, not_null, relationship).
+    - (Optional) Add Great Expectations for raw data validation.
+
