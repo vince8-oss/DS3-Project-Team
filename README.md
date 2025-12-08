@@ -192,9 +192,13 @@ bq ls --project_id=YOUR_PROJECT_ID olist_raw
 # Count rows in a specific table
 bq query --project_id=YOUR_PROJECT_ID --use_legacy_sql=false \
   'SELECT
-    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID.olist_raw.raw_customers`) as customers,
-    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID.olist_raw.raw_orders`) as orders,
-    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID.olist_raw.raw_order_items`) as order_items'
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_customers`) as customers,
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_geolocation`) as geolocation,   
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_orders`) as orders,
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_order_items`) as order_items,
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_payments`) as payments,
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_products`) as products,
+    (SELECT COUNT(*) FROM `YOUR_PROJECT_ID_raw.raw_sellers`) as sellers'
 ```
 
 Expected row counts:
