@@ -1,0 +1,28 @@
+{
+  "batch_size": 500,
+  "cluster_on_key_properties": false,
+  "column_name_transforms": {
+    "add_underscore_when_invalid": false,
+    "lower": false,
+    "quote": false,
+    "replace_period_with_underscore": false,
+    "snake_case": false
+  },
+  "dataset": "olist_raw",
+  "dedupe_before_upsert": false,
+  "denormalized": false,
+  "fail_fast": true,
+  "generate_view": false,
+  "location": "US",
+  "method": "storage_write_api",
+  "options": {
+    "process_pool": false,
+    "storage_write_batch_mode": false
+  },
+  "overwrite": false,
+  "partition_granularity": "month",
+  "project": "dsai-group",
+  "schema_resolver_version": 1,
+  "timeout": 600,
+  "upsert": false
+}
