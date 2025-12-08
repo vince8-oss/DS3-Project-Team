@@ -40,6 +40,10 @@ plugins:
     config:
       project: $GCP_PROJECT_ID
       dataset: olist_raw
+      batch_size: 500
+      max_workers: 4
+      timeout: 600
+      fail_fast: false
 environments:
 - name: dev
   env:
