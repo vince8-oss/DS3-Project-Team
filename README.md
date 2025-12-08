@@ -137,18 +137,6 @@ This will:
 2. Download the `olistbr/brazilian-ecommerce` dataset
 3. Extract 9 CSV files to `data/raw/` directory
 
-**Output**:
-
-```
-Authenticating with Kaggle...
-Downloading dataset olistbr/brazilian-ecommerce...
-Download complete. Moving files...
-- Copied olist_sellers_dataset.csv to /path/to/data/raw
-- Copied product_category_name_translation.csv to /path/to/data/raw
-...
-Successfully extracted 9 files to /path/to/data/raw
-```
-
 ### Step 2: Load Data to BigQuery
 
 Load all CSV files into BigQuery using Meltano:
