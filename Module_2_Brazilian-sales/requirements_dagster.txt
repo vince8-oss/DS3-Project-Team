@@ -1,0 +1,17 @@
+# Dagster Requirements for Brazilian Sales Pipeline
+
+# Core Dagster
+dagster==1.5.11
+dagster-webserver==1.5.11
+
+# Cloud integrations
+dagster-gcp==0.21.11
+dagster-dbt==0.21.11
+
+# Data processing
+pandas==2.0.3
+google-cloud-bigquery==3.11.4
+
+# Utilities
+python-dateutil==2.8.2
+requests==2.31.0

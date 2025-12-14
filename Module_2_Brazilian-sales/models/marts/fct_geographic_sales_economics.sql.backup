@@ -1,0 +1,93 @@
+{{ config(materialized='table') }}
+
+WITH geographic_sales AS (
+    SELECT
+        -- Location details
+        c.customer_state,
+        c.customer_city,
+        c.customer_zip_code_prefix,
+        
+        -- Date
+        DATE_TRUNC(CAST(o.order_purchase_timestamp AS DATE), MONTH) AS order_month,
+        
+        -- Product category
+        p.product_category_name,
+        
+        -- Order values
+        oi.price,
+        oi.freight_value,
+        (oi.price + oi.freight_value) AS total_value,
+        
+        -- Economic indicators  
+        ex.indicator_value AS usd_brl_rate,
+        ipca.indicator_value AS inflation_rate,
+        selic.indicator_value AS interest_rate
+        
+    FROM {{ ref('stg_customers') }} c
+    INNER JOIN {{ ref('stg_orders') }} o ON c.customer_id = o.customer_id
+    INNER JOIN {{ ref('stg_order_items') }} oi ON o.order_id = oi.order_id
+    LEFT JOIN {{ ref('stg_products') }} p ON oi.product_id = p.product_id
+    
+    -- Economic indicators
+    LEFT JOIN (
+        SELECT indicator_date, indicator_value
+        FROM {{ ref('stg_bcb_indicators') }}
+        WHERE series_name = 'exchange_rate_usd'
+    ) ex ON CAST(o.order_purchase_timestamp AS DATE) = ex.indicator_date
+    
+    LEFT JOIN (
+        SELECT indicator_date, indicator_value
+        FROM {{ ref('stg_bcb_indicators') }}
+        WHERE series_name = 'ipca'
+    ) ipca ON DATE_TRUNC(CAST(o.order_purchase_timestamp AS DATE), MONTH) = DATE_TRUNC(ipca.indicator_date, MONTH)
+    
+    LEFT JOIN (
+        SELECT indicator_date, indicator_value
+        FROM {{ ref('stg_bcb_indicators') }}
+        WHERE series_name = 'selic'
+    ) selic ON DATE_TRUNC(CAST(o.order_purchase_timestamp AS DATE), MONTH) = DATE_TRUNC(selic.indicator_date, MONTH)
+    
+    WHERE o.order_status IN ('delivered', 'shipped', 'approved')
+),
+
+state_summary AS (
+    SELECT
+        customer_state,
+        customer_city,
+        order_month,
+        product_category_name,
+        
+        -- Sales metrics
+        COUNT(*) AS order_count,
+        ROUND(SUM(total_value), 2) AS total_revenue_brl,
+        ROUND(AVG(total_value), 2) AS avg_order_value_brl,
+        
+        -- Economic context
+        ROUND(AVG(usd_brl_rate), 4) AS avg_exchange_rate,
+        ROUND(AVG(inflation_rate), 2) AS avg_inflation,
+        ROUND(AVG(interest_rate), 2) AS avg_selic,
+        
+        -- USD metrics
+        ROUND(SUM(total_value / NULLIF(usd_brl_rate, 0)), 2) AS total_revenue_usd,
+        ROUND(AVG(total_value / NULLIF(usd_brl_rate, 0)), 2) AS avg_order_value_usd,
+        
+        -- Economic period classification
+        CASE
+            WHEN AVG(usd_brl_rate) < 3.5 THEN 'Strong BRL'
+            WHEN AVG(usd_brl_rate) BETWEEN 3.5 AND 4.5 THEN 'Moderate BRL'
+            ELSE 'Weak BRL'
+        END AS currency_strength,
+        
+        CASE
+            WHEN AVG(interest_rate) < 7 THEN 'Low Interest'
+            WHEN AVG(interest_rate) BETWEEN 7 AND 12 THEN 'Moderate Interest'
+            ELSE 'High Interest'
+        END AS interest_environment,
+        
+        CURRENT_TIMESTAMP() AS dbt_updated_at
+        
+    FROM geographic_sales
+    GROUP BY customer_state, customer_city, order_month, product_category_name
+)
+
+SELECT * FROM state_summary
