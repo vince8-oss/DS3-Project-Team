@@ -54,6 +54,8 @@
 
 This project demonstrates a **data engineering pipeline** that analyzes 99,000+ Brazilian e-commerce orders alongside macroeconomic indicators to understand how exchange rates, inflation, and interest rates impact sales performance.
 
+![Data Insights](/sources/img/01_data-insights.png)
+
 ### Business Context
 
 **The Challenge**: Understanding how economic factors influence e-commerce sales patterns
@@ -176,54 +178,11 @@ KAGGLE_KEY=your-api-key
 
 ### System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                       DATA SOURCES                          │
-├─────────────────────────────────────────────────────────────┤
-│  Kaggle API              Brazilian Central Bank API         │
-│  (99K orders)            (350K economic indicators)         │
-└──────────┬──────────────────────────┬──────────────────────┘
-           │                          │
-           ▼                          ▼
-    ┌──────────────┐          ┌──────────────┐
-    │   EXTRACT    │          │   EXTRACT    │
-    │ Kaggle Data  │          │   BCB Data   │
-    │  Python      │          │   Python     │
-    └──────┬───────┘          └───────┬──────┘
-           │                          │
-           └─────────┬────────────────┘
-                     ▼
-              ┌──────────────┐
-              │     LOAD     │
-              │   Meltano    │
-              │  Singer ELT  │
-              └──────┬───────┘
-                     │
-                     ▼
-              ┌──────────────┐
-              │   WAREHOUSE  │
-              │  BigQuery    │
-              │ Raw Dataset  │
-              └──────┬───────┘
-                     │
-                     ▼
-              ┌──────────────┐
-              │  TRANSFORM   │
-              │  dbt Core    │
-              │  6 Staging   │
-              │  4 Marts     │
-              └──────┬───────┘
-                     │
-        ┌────────────┴────────────┐
-        │                         │
-        ▼                         ▼
-┌───────────────┐      ┌──────────────────┐
-│ ORCHESTRATION │      │  VISUALIZATION   │
-│   Dagster     │      │   Streamlit      │
-│  4 Jobs       │      │  15+ Charts      │
-│  4 Schedules  │      │  Dual Language   │
-└───────────────┘      └──────────────────┘
-```
+![Data Insights](/sources/img/02_architecture.png)
+
+---
+
+##
 
 ### Data Flow
 
