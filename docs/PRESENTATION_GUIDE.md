@@ -351,18 +351,3 @@ A: Dagster's asset-based approach provides better data lineage tracking, built-i
 - **Sample Queries:** Interesting BigQuery queries
 
 ---
-
-## ✅ Pre-Presentation Checklist
-
-- [ ] Test full pipeline run (30 minutes before)
-- [ ] Dashboard loads successfully
-- [ ] BigQuery console accessible
-- [ ] Environment variables configured
-- [ ] Backup plan for demo failures (screenshots/video)
-- [ ] Slide deck finalized
-- [ ] Notes prepared for Q&A
-- [ ] Time rehearsal (aim for 15-18 minutes)
-
----
-
-**Good luck with your presentation! 🚀**
