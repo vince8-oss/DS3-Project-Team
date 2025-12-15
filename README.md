@@ -54,6 +54,8 @@
 
 This project demonstrates a **data engineering pipeline** that analyzes 99,000+ Brazilian e-commerce orders alongside macroeconomic indicators to understand how exchange rates, inflation, and interest rates impact sales performance.
 
+![Data Insights](/sources/img/01_data-insights.png)
+
 ### Business Context
 
 **The Challenge**: Understanding how economic factors influence e-commerce sales patterns
@@ -175,54 +177,11 @@ KAGGLE_KEY=your-api-key
 
 ### System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                       DATA SOURCES                          │
-├─────────────────────────────────────────────────────────────┤
-│  Kaggle API              Brazilian Central Bank API         │
-│  (99K orders)            (350K economic indicators)         │
-└──────────┬──────────────────────────┬──────────────────────┘
-           │                          │
-           ▼                          ▼
-    ┌──────────────┐          ┌──────────────┐
-    │   EXTRACT    │          │   EXTRACT    │
-    │ Kaggle Data  │          │   BCB Data   │
-    │  Python      │          │   Python     │
-    └──────┬───────┘          └───────┬──────┘
-           │                          │
-           └─────────┬────────────────┘
-                     ▼
-              ┌──────────────┐
-              │     LOAD     │
-              │   Meltano    │
-              │  Singer ELT  │
-              └──────┬───────┘
-                     │
-                     ▼
-              ┌──────────────┐
-              │   WAREHOUSE  │
-              │  BigQuery    │
-              │ Raw Dataset  │
-              └──────┬───────┘
-                     │
-                     ▼
-              ┌──────────────┐
-              │  TRANSFORM   │
-              │  dbt Core    │
-              │  6 Staging   │
-              │  4 Marts     │
-              └──────┬───────┘
-                     │
-        ┌────────────┴────────────┐
-        │                         │
-        ▼                         ▼
-┌───────────────┐      ┌──────────────────┐
-│ ORCHESTRATION │      │  VISUALIZATION   │
-│   Dagster     │      │   Streamlit      │
-│  4 Jobs       │      │  15+ Charts      │
-│  4 Schedules  │      │  Dual Language   │
-└───────────────┘      └──────────────────┘
-```
+![Data Insights](/sources/img/02_architecture.png)
+
+---
+
+##
 
 ### Data Flow
 
@@ -533,7 +492,7 @@ dagster job execute bcb_economic_indicators
 
 ---
 
-## ✨ Key Features
+## ✨ Fusing Sales and Economic Data
 
 ### 1. Economic Context Integration
 
@@ -615,35 +574,27 @@ Total: 71 categories translated
 
 **1. Exchange Rate Sensitivity**
 
-**Finding**: When BRL depreciates 10% against USD, domestic sales increase 7%
-
-**Explanation**: Weaker Real makes imports expensive, driving consumers to domestic products
-
-**Business Impact**: Adjust inventory and pricing based on FX forecasts
+* **Finding**: When BRL depreciates 10% against USD, domestic sales increase 7%
+* **Explanation**: Weaker Real makes imports expensive, driving consumers to domestic products
+* **Business Impact**: Adjust inventory and pricing based on FX forecasts
 
 **2. Geographic Concentration**
 
-**Finding**: São Paulo + Rio de Janeiro = 55% of all orders
-
-**Explanation**: Urban centers with higher purchasing power dominate
-
-**Business Impact**: Target marketing to secondary cities for growth
+* **Finding**: São Paulo + Rio de Janeiro = 55% of all orders
+* **Explanation**: Urban centers with higher purchasing power dominate
+* **Business Impact**: Target marketing to secondary cities for growth
 
 **3. Category Correlation with SELIC**
 
-**Finding**: Electronics sales decrease 15% when SELIC rate increases 1%
-
-**Explanation**: Higher interest rates reduce consumer credit for big-ticket items
-
-**Business Impact**: Promote financing during low-rate periods
+* **Finding**: Electronics sales decrease 15% when SELIC rate increases 1%
+* **Explanation**: Higher interest rates reduce consumer credit for big-ticket items
+* **Business Impact**: Promote financing during low-rate periods
 
 **4. Seasonal Economic Patterns**
 
-**Finding**: Economic indicators lag sales changes by ~2 weeks
-
-**Explanation**: Consumer behavior responds faster than published economic data
-
-**Business Impact**: Use sales trends as leading economic indicator
+* **Finding**: Economic indicators lag sales changes by ~2 weeks
+* **Explanation**: Consumer behavior responds faster than published economic data
+* **Business Impact**: Use sales trends as leading economic indicator
 
 ---
 
