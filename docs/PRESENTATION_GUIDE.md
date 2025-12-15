@@ -269,76 +269,11 @@ A: BigQuery's serverless architecture, built-in ML capabilities, and seamless in
 **Q: How do you handle data quality issues?**
 A: Three-layer approach: (1) dbt schema tests, (2) Great Expectations for data profiling, (3) Dagster sensors for freshness checks.
 
-**Q: What's the data refresh frequency?**
-A: Daily full refresh at 6 AM for sales data, 2 PM for economic indicators. Can be adjusted via Dagster schedules.
-
 **Q: How would this scale to millions of orders?**
 A: Current architecture scales horizontally. Would implement: (1) incremental dbt models, (2) table partitioning, (3) materialized views for frequently-accessed aggregations.
 
 **Q: Why not use Airflow instead of Dagster?**
 A: Dagster's asset-based approach provides better data lineage tracking, built-in testing, and modern Python API. Better for data engineering workflows vs. Airflow's task-based model.
-
----
-
-## 🎬 Presentation Tips
-
-### Before the Presentation:
-- [ ] Run full pipeline to ensure everything works
-- [ ] Pre-load dashboard to avoid startup delays
-- [ ] Have BigQuery console open in a tab
-- [ ] Prepare backup slides with screenshots (in case of Wi-Fi issues)
-- [ ] Test screen sharing/projector
-
-### During the Presentation:
-- **Focus on the "Why":** Explain architectural decisions, not just what you built
-- **Show, Don't Tell:** Live demos are more impactful than slides
-- **Highlight Complexity:** Emphasize data integration challenges
-- **Business Context:** Connect technical details to business value
-- **Time Management:** Reserve 5 minutes for Q&A
-
-### Common Mistakes to Avoid:
-- ❌ Reading code line-by-line
-- ❌ Showing every single file/model
-- ❌ Getting lost in environment setup issues (pre-test!)
-- ❌ Ignoring the business problem
-- ❌ Rushing through the demo
-
----
-
-## 📝 Handout / Slide Outline
-
-### Recommended Slides:
-
-1. **Title Slide**
-   - Project name, team members, date
-
-2. **Problem Statement**
-   - Business question
-   - Data sources
-
-3. **Architecture Diagram**
-   - End-to-end pipeline flow
-
-4. **Technology Stack**
-   - Tools and justification
-
-5. **Data Model**
-   - ERD or dbt lineage graph
-
-6. **Key Insights**
-   - 3-4 data visualizations from dashboard
-
-7. **Technical Highlights**
-   - Code snippets (dbt model, orchestration)
-
-8. **Challenges & Learnings**
-   - Problems solved
-
-9. **Future Work**
-   - Roadmap
-
-10. **Thank You / Q&A**
-    - Contact info, repo link
 
 ---
 
