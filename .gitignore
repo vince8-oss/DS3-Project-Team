@@ -27,6 +27,7 @@ __pycache__/
 dist/
 build/
 *.spec
+*_backup.py
 
 # ----------------------
 # Jupyter Notebooks
@@ -59,6 +60,12 @@ logs/
 debug.log
 
 # ----------------------
+# Backup files
+# ----------------------
+*.backup
+*.bak
+
+# ----------------------
 # Data files
 # ----------------------
 *.csv
@@ -81,6 +88,7 @@ datasets/
 # ----------------------
 .DS_Store
 Thumbs.db
+*:Zone.Identifier
 
 # ----------------------
 # dbt generated files
@@ -88,6 +96,8 @@ Thumbs.db
 target/
 dbt_packages/
 dbt_modules/
+transform/target/
+transform/dbt_packages/
 
 # ----------------------
 # Great Expectations
@@ -134,3 +144,18 @@ reports/
 # Documentations
 # ----------------------
 # docs/
+.az-notes
+
+# ----------------------
+# Credentials & Secrets
+# ----------------------
+*.json
+!package.json
+!meltano.json
+dashboard/.streamlit/secrets.toml
+
+# ----------------------
+# Orchestration
+# ----------------------
+orchestration/tmpfiles/
+orchestration/*/tmpfiles/
