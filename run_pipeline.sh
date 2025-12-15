@@ -64,15 +64,19 @@ if [ ! -f ".env" ]; then
     exit 1
 fi
 
-# Activate virtual environment
-if [ -d ".venv" ]; then
-    source .venv/bin/activate
+# Check conda environment
+if [[ "$CONDA_DEFAULT_ENV" != "ds3" ]]; then
+    echo -e "${RED}✗ This script must be run inside the 'ds3' conda environment.${NC}"
+    echo -e "${YELLOW}→ Please activate the environment first: conda activate ds3${NC}\n"
+    exit 1
 else
-    echo -e "${YELLOW}⚠ Virtual environment not found. Using system Python...${NC}\n"
+    echo -e "${GREEN}✓ Running in conda environment: $CONDA_DEFAULT_ENV${NC}\n"
 fi
 
-# Load environment variables
+# Load and export environment variables
+set -a  # automatically export all variables
 source .env
+set +a  # disable automatic export
 
 # Verify required environment variables
 REQUIRED_VARS=("GCP_PROJECT_ID" "GOOGLE_APPLICATION_CREDENTIALS")
@@ -103,7 +107,7 @@ if [ "$RUN_EXTRACT" = true ]; then
     echo -e "${BLUE}------------------------------------------------------------${NC}\n"
 
     # Extract Kaggle data
-    echo -e "${YELLOW}[1/2] Extracting Kaggle e-commerce data...${NC}"
+    echo -e "${YELLOW}[1/3] Extracting Kaggle e-commerce data...${NC}"
     if python extract/kaggle_extractor.py; then
         echo -e "${GREEN}✓ Kaggle extraction completed${NC}\n"
     else
@@ -111,8 +115,17 @@ if [ "$RUN_EXTRACT" = true ]; then
         exit 1
     fi
 
+    # Load CSV files to BigQuery
+    echo -e "${YELLOW}[2/3] Loading CSV files to BigQuery...${NC}"
+    if python extract/csv_loader.py; then
+        echo -e "${GREEN}✓ CSV files loaded to BigQuery${NC}\n"
+    else
+        echo -e "${RED}✗ CSV loading failed${NC}\n"
+        exit 1
+    fi
+
     # Extract BCB economic data
-    echo -e "${YELLOW}[2/2] Extracting BCB economic indicators...${NC}"
+    echo -e "${YELLOW}[3/3] Extracting BCB economic indicators...${NC}"
     if python extract/bcb_extractor.py; then
         echo -e "${GREEN}✓ BCB extraction completed${NC}\n"
     else
@@ -143,7 +156,7 @@ if [ "$RUN_TRANSFORM" = true ]; then
 
     # Run staging models
     echo -e "${YELLOW}[2/4] Building staging models...${NC}"
-    if dbt run --select stg_*; then
+    if dbt run --select staging; then
         echo -e "${GREEN}✓ Staging models built${NC}\n"
     else
         echo -e "${RED}✗ Staging model build failed${NC}\n"
@@ -152,7 +165,7 @@ if [ "$RUN_TRANSFORM" = true ]; then
 
     # Run mart models
     echo -e "${YELLOW}[3/4] Building mart models...${NC}"
-    if dbt run --select fct_*; then
+    if dbt run --select marts; then
         echo -e "${GREEN}✓ Mart models built${NC}\n"
     else
         echo -e "${RED}✗ Mart model build failed${NC}\n"

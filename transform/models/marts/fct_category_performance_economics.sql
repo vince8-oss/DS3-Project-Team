@@ -1,9 +1,16 @@
 {{ config(materialized='table') }}
 
-WITH product_sales AS (
+WITH product_categories AS (
     SELECT
-        p.product_category_name,
-        pc.product_category_name_english,
+        product_category_name AS category_pt,
+        product_category_name_english AS category_en
+    FROM {{ source('brazilian_sales', 'public-product_category') }}
+),
+
+product_sales AS (
+    SELECT
+        p.product_category_name AS product_category_name,
+        COALESCE(pc.category_en, p.product_category_name) AS category_name_english,
         DATE_TRUNC(CAST(o.order_purchase_timestamp AS DATE), MONTH) AS order_month,
         c.customer_state,
         oi.price,
@@ -15,8 +22,7 @@ WITH product_sales AS (
     INNER JOIN {{ ref('stg_products') }} p ON oi.product_id = p.product_id
     INNER JOIN {{ ref('stg_customers') }} c ON o.customer_id = c.customer_id
     -- Join product category translation table
-    LEFT JOIN {{ source('brazilian_sales', 'public-product_category') }} pc 
-        ON p.product_category_name = pc.product_category_name
+    LEFT JOIN product_categories pc ON p.product_category_name = pc.category_pt
     LEFT JOIN (
         SELECT indicator_date, indicator_value
         FROM {{ ref('stg_bcb_indicators') }}
@@ -28,7 +34,7 @@ WITH product_sales AS (
 category_aggregates AS (
     SELECT
         -- Use English category name, fallback to Portuguese if missing
-        COALESCE(product_category_name_english, product_category_name) AS category_name,
+        category_name_english AS category_name,
         product_category_name AS category_name_pt,
         order_month,
         customer_state,
@@ -45,10 +51,10 @@ category_aggregates AS (
         CURRENT_TIMESTAMP() AS dbt_updated_at
     FROM product_sales
     WHERE product_category_name IS NOT NULL
-    GROUP BY 
-        COALESCE(product_category_name_english, product_category_name),
+    GROUP BY
+        category_name_english,
         product_category_name,
-        order_month, 
+        order_month,
         customer_state
 )
 

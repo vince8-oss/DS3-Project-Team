@@ -3,8 +3,8 @@ version: 2
 sources:
   - name: brazilian_sales
     description: "Raw Brazilian e-commerce sales data"
-    database: apc-data-science-and-ai
-    schema: brazilian_sales
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: "{{ env_var('BQ_DATASET_RAW') }}"
     
     tables:
       - name: public-orders

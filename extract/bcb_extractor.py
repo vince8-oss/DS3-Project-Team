@@ -10,6 +10,10 @@ import pandas as pd
 from google.cloud import bigquery
 from datetime import datetime
 import json
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class BCBExtractor:
     """Extract data from Brazilian Central Bank API"""
@@ -31,7 +35,23 @@ class BCBExtractor:
         self.dataset_id = dataset_id
         self.credentials_path = credentials_path
         self.client = bigquery.Client.from_service_account_json(credentials_path)
+        self._ensure_dataset_exists()
     
+    def _ensure_dataset_exists(self):
+        """Create dataset if it doesn't exist"""
+        dataset_ref = f"{self.project_id}.{self.dataset_id}"
+
+        try:
+            self.client.get_dataset(dataset_ref)
+            print(f"✓ Dataset {dataset_ref} exists")
+        except Exception:
+            print(f"Creating dataset {dataset_ref}...")
+            dataset = bigquery.Dataset(dataset_ref)
+            dataset.location = "US"  # Set location
+            dataset.description = "Brazilian E-Commerce raw data"
+            self.client.create_dataset(dataset, exists_ok=True)
+            print(f"✓ Created dataset {dataset_ref}")
+
     def extract_series(self, series_name, start_date=None, end_date=None):
         """
         Extract data from BCB API

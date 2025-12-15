@@ -41,10 +41,6 @@
 - [Data Quality](#data-quality-metrics)
 - [Code Quality](#code-quality-tools)
 
-### Presentation
-- [Class Presentation Guide](#-class-presentation-guide)
-- [Demo Script](#demo-script-15-minutes)
-- [Q&A Preparation](#-common-questions--answers)
 
 ### Reference
 - [Performance Metrics](#-performance-metrics)
@@ -95,10 +91,11 @@ This project demonstrates a **data engineering pipeline** that analyzes 99,000+ 
 
 ### Prerequisites
 
-- **Python**: 3.10 or higher
+- **Python**: 3.12 (recommended via conda)
+- **Conda**: Miniconda or Anaconda
 - **Google Cloud**: Active GCP project with BigQuery enabled
 - **Kaggle**: API credentials ([Get them here](https://www.kaggle.com/settings/account))
-- **Tools**: git, pip/conda
+- **Tools**: git, uv (installed via conda)
 
 ### Installation
 
@@ -108,6 +105,12 @@ This project demonstrates a **data engineering pipeline** that analyzes 99,000+ 
 # Clone repository
 git clone https://github.com/azniosman/DS3-Project-Team.git
 cd DS3-Project-Team
+
+# Create conda environment
+conda env create -f environment.yml
+
+# Activate environment
+conda activate ds3
 
 # Run automated setup
 ./setup.sh
@@ -125,26 +128,37 @@ streamlit run dashboard/streamlit_app.py
 **Option 2: Manual Setup**
 
 ```bash
-# 1. Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+# 1. Create conda environment
+conda env create -f environment.yml
+conda activate ds3
 
-# 2. Install dependencies
-pip install -r requirements.txt
+# 2. Install Python dependencies
+uv pip install -r requirements.txt
 
-# 3. Install dbt packages
+# 3. Create BigQuery datasets
+python scripts/create_datasets.py
+
+# 4. Install dbt packages
 cd transform
 dbt deps
 cd ..
 
-# 4. Configure environment
+# 5. Configure dbt profiles
+# Profile is auto-created at ~/.dbt/profiles.yml
+
+# 6. Configure environment
 cp .env.example .env
 # Edit .env with your credentials
 
-# 5. Run pipeline components individually
-python extract/kaggle_extractor.py
-python extract/bcb_extractor.py
-cd transform && dbt run && dbt test
+# 7. Run pipeline components individually
+python extract/kaggle_extractor.py      # Download CSVs
+python extract/csv_loader.py            # Load CSVs to BigQuery
+python extract/bcb_extractor.py         # Load economic data
+cd transform
+dbt run --select staging                # Build staging models
+dbt run --select marts                  # Build mart models
+dbt test                                # Run data quality tests
+cd ..
 streamlit run dashboard/streamlit_app.py
 ```
 
@@ -159,7 +173,8 @@ GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 
 # BigQuery Datasets
 BQ_DATASET_RAW=brazilian_sales
-BQ_DATASET_PROD=brazilian_sales_marts
+BQ_DATASET_PROD=brazilian_sales_prod
+BQ_LOCATION=US
 
 # Kaggle API
 KAGGLE_USERNAME=your-username
@@ -408,7 +423,7 @@ LEFT JOIN {{ ref('stg_bcb_indicators') }} e
 
 ### 1. Data Extraction
 
-**Extract Kaggle E-Commerce Data**:
+**Step 1: Extract Kaggle E-Commerce Data**:
 ```bash
 python extract/kaggle_extractor.py
 ```
@@ -418,7 +433,18 @@ python extract/kaggle_extractor.py
 - ~100MB total
 - 2-3 minutes execution time
 
-**Extract BCB Economic Data**:
+**Step 2: Load CSVs to BigQuery**:
+```bash
+python extract/csv_loader.py
+```
+
+**Output**:
+- 8 tables loaded to BigQuery `brazilian_sales` dataset
+- 1.4M+ total rows
+- ~1 minute execution time
+- Automatic dataset creation if needed
+
+**Step 3: Extract BCB Economic Data**:
 ```bash
 python extract/bcb_extractor.py
 ```
@@ -427,6 +453,7 @@ python extract/bcb_extractor.py
 - Direct load to BigQuery table `bcb_economic_indicators`
 - 350K+ records
 - 1-2 minutes execution time
+- Creates datasets automatically
 
 ### 2. Data Transformation
 
@@ -452,15 +479,15 @@ dbt run
 
 **Run specific layers**:
 ```bash
-dbt run --select stg_*      # Staging only
-dbt run --select fct_*      # Marts only
+dbt run --select staging    # Staging only
+dbt run --select marts      # Marts only
 ```
 
 **Run tests**:
 ```bash
 dbt test                    # All tests
-dbt test --select stg_*     # Staging tests only
-dbt test --select fct_*     # Marts tests only
+dbt test --select staging   # Staging tests only
+dbt test --select marts     # Marts tests only
 ```
 
 **Generate documentation**:
@@ -687,282 +714,6 @@ isort .
 
 ---
 
-## 🎓 Class Presentation Guide
-
-### Demo Script (15 minutes)
-
-#### Part 1: Introduction (2 minutes)
-
-**Opening Statement**:
-> "This project analyzes 99,000+ Brazilian e-commerce orders alongside macroeconomic data to answer: How do exchange rates, inflation, and interest rates impact sales? Unlike typical dashboards, we integrate real economic context with sales data."
-
-**Key Points to Highlight**:
-- Production-grade modern data stack
-- 450K+ rows across multiple sources
-- Automated daily pipeline
-- Unique economic correlation insights
-
-#### Part 2: Architecture Tour (2 minutes)
-
-**Show Architecture Diagram**
-
-**Explain Each Layer**:
-1. **Extract**: "Python scripts pull from Kaggle API and Brazilian Central Bank"
-2. **Load**: "Meltano orchestrates CSV → BigQuery ingestion"
-3. **Transform**: "dbt creates 10 models with economic joins"
-4. **Orchestrate**: "Dagster schedules daily at 2 AM"
-5. **Visualize**: "Streamlit provides interactive dual-language dashboard"
-
-#### Part 3: Live Demo - Pipeline Execution (3 minutes)
-
-**Command**:
-```bash
-./run_pipeline.sh --full
-```
-
-**Expected Output** (narrate as it runs):
-```
-[EXTRACTION]
-✓ Kaggle data extraction completed
-✓ BCB economic data extraction completed
-
-[TRANSFORMATION]
-✓ Staging models built (6 models)
-✓ Mart models built (4 models)
-✓ All 45 tests passed
-
-Pipeline completed successfully!
-```
-
-**While it runs, explain**:
-- "Extracting 99K orders from Kaggle..."
-- "Fetching 350K economic indicators from BCB..."
-- "dbt transforming raw data into analytical marts..."
-- "Running 45 data quality tests..."
-
-#### Part 4: Dashboard Demo (5 minutes)
-
-**Launch Dashboard**:
-```bash
-streamlit run dashboard/streamlit_app.py
-```
-
-**Tour Each Tab**:
-
-**Tab 1 - Overview** (1 min):
-- Point out total revenue, orders, exchange rate trend
-- "Notice how we show economic context alongside sales metrics"
-
-**Tab 2 - Category Analysis** (2 min):
-- Filter to "Health & Beauty"
-- Show revenue trend chart
-- "See how sales correlate with USD/BRL exchange rate"
-- Toggle language to show Portuguese support
-
-**Tab 3 - Geographic Analysis** (1 min):
-- Show state-level map
-- "São Paulo and Rio account for 55% of orders"
-- Explain urban concentration
-
-**Tab 4 - Economic Impact** (1 min):
-- Show correlation heatmap
-- "Strong negative correlation between SELIC and electronics sales"
-- "This insight drives inventory planning"
-
-#### Part 5: Technical Deep Dive (2 minutes)
-
-**Show dbt Model Code**:
-```bash
-cat transform/models/marts/fct_category_performance_economics.sql
-```
-
-**Explain Key Pattern**:
-> "This SQL joins sales data with economic indicators by date. For each order, we attach the exchange rate on that purchase date. This enables time-series correlation analysis."
-
-**Highlight**:
-- `{{ ref() }}` for dependency tracking
-- `SAFE_CAST` for error handling
-- Economic join pattern
-
-#### Part 6: Q&A (1 minute)
-
-Reserve time for questions
-
----
-
-## ❓ Common Questions & Answers
-
-### Q1: "Why BigQuery instead of Snowflake or Redshift?"
-
-**Answer**:
-> "BigQuery's serverless architecture means zero infrastructure management. It has built-in ML capabilities for future enhancements, seamless GCP integration, and strong dbt support. For academic projects and startups, the free tier (1TB queries/month) is generous."
-
-### Q2: "How do you handle data quality issues?"
-
-**Answer**:
-> "Three-layer approach: (1) dbt schema tests for structure validation, (2) custom business logic tests via macros, (3) Dagster sensors monitoring freshness. If any test fails, the pipeline stops and alerts via logs. We achieve 99.2% completeness and 100% consistency."
-
-### Q3: "What's the data refresh frequency?"
-
-**Answer**:
-> "Daily full refresh. Economic indicators update at 2 AM, staging models at 3 AM, marts at 4 AM. For production, we'd implement incremental dbt models to refresh only changed records, but full refresh works fine for this volume (450K rows complete in <2 minutes)."
-
-### Q4: "How would this scale to millions of orders?"
-
-**Answer**:
-> "Current architecture scales horizontally. For 1M+ orders we'd add: (1) Incremental dbt models with `{{ is_incremental() }}`, (2) BigQuery table partitioning by month, (3) Clustering on customer_id/product_id, (4) Materialized views for dashboard queries. BigQuery can handle billions of rows easily."
-
-### Q5: "What was the biggest technical challenge?"
-
-**Answer**:
-> "Joining sales data with time-series economic indicators. Each order happened on a specific date, so we needed the exact exchange rate for that day. We solved it with date-based LEFT JOINs and window functions to handle missing dates (holidays/weekends) by carrying forward last available value."
-
-### Q6: "Why dbt instead of stored procedures?"
-
-**Answer**:
-> "dbt brings software engineering practices to SQL: version control, testing framework, documentation generation, dependency management, environment separation (dev/prod). It's SQL-first but with modern DevOps capabilities. Stored procedures lack these features."
-
-### Q7: "How long did this take to build?"
-
-**Answer**:
-> "Initial Module 1 (basic pipeline): ~2 weeks. Module 2 (economic integration + Dagster): ~3 weeks. Refactoring to unified structure: ~1 week. Total: ~6 weeks with extensive testing and documentation."
-
----
-
-## 📊 Performance Metrics
-
-### Data Volume
-
-| Metric | Count |
-|--------|-------|
-| **Orders** | 99,441 |
-| **Order Items** | 112,650 |
-| **Customers** | 99,441 |
-| **Products** | 32,951 |
-| **Economic Indicators** | 350,000+ |
-| **Total Rows (All Tables)** | 450,000+ |
-| **dbt Models** | 10 |
-| **dbt Tests** | 45+ |
-
-### Pipeline Performance
-
-| Stage | Time | Notes |
-|-------|------|-------|
-| **Kaggle Extraction** | 2-3 min | 9 CSV files, ~100MB |
-| **BCB Extraction** | 1-2 min | API calls, direct to BigQuery |
-| **dbt Staging** | 30-45 sec | 6 views |
-| **dbt Marts** | 45-60 sec | 4 tables |
-| **dbt Tests** | 15-20 sec | 45 tests |
-| **Total End-to-End** | <5 min | Full pipeline |
-| **Dashboard Load** | <2 sec | First page load |
-
-### Automation Benefits
-
-| Metric | Manual | Automated | Savings |
-|--------|--------|-----------|---------|
-| **Daily Execution** | 23 min | 5 min | 18 min |
-| **Annual Hours** | 140 hrs | 30 hrs | 110 hrs |
-| **Reliability** | ~90% | 99.5% | +9.5% |
-| **Error Rate** | ~10% | <1% | -9% |
-
----
-
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-#### 1. BigQuery Authentication Error
-
-**Symptom**: `google.auth.exceptions.DefaultCredentialsError`
-
-**Solution**:
-```bash
-# Verify credentials path
-echo $GOOGLE_APPLICATION_CREDENTIALS
-
-# Should output: /path/to/service-account-key.json
-
-# If not set:
-export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
-
-# Or add to .env file
-```
-
-#### 2. dbt Compilation Error
-
-**Symptom**: `Compilation Error in model`
-
-**Solution**:
-```bash
-cd transform
-
-# Clean compiled files
-dbt clean
-
-# Reinstall packages
-dbt deps
-
-# Test compilation
-dbt compile
-
-# Check for SQL errors in models/
-```
-
-#### 3. Streamlit Connection Error
-
-**Symptom**: Dashboard won't load, BigQuery connection timeout
-
-**Solution**:
-```bash
-# Check environment variables are loaded
-source .env
-
-# Verify project ID
-echo $GCP_PROJECT_ID
-
-# Test BigQuery connection manually
-bq ls --project_id=$GCP_PROJECT_ID
-
-# Restart Streamlit
-streamlit run dashboard/streamlit_app.py
-```
-
-#### 4. Dagster Assets Not Loading
-
-**Symptom**: Empty asset graph in Dagster UI
-
-**Solution**:
-```bash
-cd orchestration
-
-# Set Dagster home
-export DAGSTER_HOME=~/.dagster
-
-# Reload definitions
-dagster dev --reload
-
-# Check for Python errors in logs
-```
-
-#### 5. Meltano Pipeline Fails
-
-**Symptom**: `meltano run` exits with error
-
-**Solution**:
-```bash
-# Check Meltano installation
-meltano --version
-
-# Verify plugin installation
-meltano install
-
-# Test tap-csv
-meltano invoke tap-csv --discover
-
-# Check BigQuery credentials in meltano.yml
-```
-
----
 
 ## 🔗 Additional Resources
 

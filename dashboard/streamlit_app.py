@@ -11,10 +11,17 @@ import plotly.graph_objects as go
 from google.cloud import bigquery
 from datetime import datetime
 import numpy as np
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Configuration from environment variables
 GCP_PROJECT_ID = os.getenv('GCP_PROJECT_ID')
-BQ_DATASET_PROD = os.getenv('BQ_DATASET_PROD', 'brazilian_sales_marts')
+# In dev mode, dbt creates schemas as {dataset}_marts
+# So if BQ_DATASET_RAW is brazilian_sales, marts tables are in brazilian_sales_marts
+BQ_DATASET_RAW = os.getenv('BQ_DATASET_RAW', 'brazilian_sales')
+BQ_DATASET_MARTS = f"{BQ_DATASET_RAW}_marts"
 CREDENTIALS_PATH = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
 # Page configuration
@@ -50,11 +57,14 @@ def load_category_data():
         avg_order_value_brl,
         avg_exchange_rate,
         exchange_rate_period
-    FROM `{GCP_PROJECT_ID}.{BQ_DATASET_PROD}.fct_category_performance_economics`
+    FROM `{GCP_PROJECT_ID}.{BQ_DATASET_MARTS}.fct_category_performance_economics`
     WHERE category_name IS NOT NULL
     ORDER BY order_month DESC
     """
-    return client.query(query).to_dataframe()
+    df = client.query(query).to_dataframe()
+    # Convert order_month to datetime
+    df['order_month'] = pd.to_datetime(df['order_month'])
+    return df
 
 @st.cache_data(ttl=3600)
 def load_geographic_data():
@@ -72,11 +82,14 @@ def load_geographic_data():
         total_revenue_usd,
         avg_exchange_rate,
         currency_strength
-    FROM `{GCP_PROJECT_ID}.{BQ_DATASET_PROD}.fct_geographic_sales_economics`
+    FROM `{GCP_PROJECT_ID}.{BQ_DATASET_MARTS}.fct_geographic_sales_economics`
     WHERE category_name IS NOT NULL
     ORDER BY order_month DESC
     """
-    return client.query(query).to_dataframe()
+    df = client.query(query).to_dataframe()
+    # Convert order_month to datetime
+    df['order_month'] = pd.to_datetime(df['order_month'])
+    return df
 
 # Main app
 def main():
