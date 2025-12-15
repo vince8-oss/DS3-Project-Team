@@ -88,7 +88,7 @@ This project demonstrates a **data engineering pipeline** that analyzes 99,000+ 
 
 ```bash
 # Clone repository
-git clone https://github.com/azniosman/DS3-Project-Team.git
+git clone https://github.com/vince8-oss/DS3-Project-Team.git
 cd DS3-Project-Team
 
 # Create conda environment
