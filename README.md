@@ -65,17 +65,6 @@ This project demonstrates a **data engineering pipeline** that analyzes 99,000+ 
 
 **The Impact**: Data-driven insights for inventory planning, pricing strategy, and market expansion
 
-### Project Metrics
-
-| Metric | Value |
-|--------|-------|
-| **Orders Analyzed** | 99,441 |
-| **Total Data Rows** | 450,000+ |
-| **dbt Models** | 10 (6 staging + 4 marts) |
-| **Data Quality Tests** | 45+ |
-| **Pipeline Execution Time** | <5 minutes |
-| **Dashboard Load Time** | <2 seconds |
-| **Automation Savings** | 23 min/day |
 
 ### Technical Highlights
 
@@ -545,7 +534,7 @@ dagster job execute bcb_economic_indicators
 
 ---
 
-## ✨ Key Features
+## ✨ Fusing Sales and Economic Data
 
 ### 1. Economic Context Integration
 
@@ -627,35 +616,27 @@ Total: 71 categories translated
 
 **1. Exchange Rate Sensitivity**
 
-**Finding**: When BRL depreciates 10% against USD, domestic sales increase 7%
-
-**Explanation**: Weaker Real makes imports expensive, driving consumers to domestic products
-
-**Business Impact**: Adjust inventory and pricing based on FX forecasts
+* **Finding**: When BRL depreciates 10% against USD, domestic sales increase 7%
+* **Explanation**: Weaker Real makes imports expensive, driving consumers to domestic products
+* **Business Impact**: Adjust inventory and pricing based on FX forecasts
 
 **2. Geographic Concentration**
 
-**Finding**: São Paulo + Rio de Janeiro = 55% of all orders
-
-**Explanation**: Urban centers with higher purchasing power dominate
-
-**Business Impact**: Target marketing to secondary cities for growth
+* **Finding**: São Paulo + Rio de Janeiro = 55% of all orders
+* **Explanation**: Urban centers with higher purchasing power dominate
+* **Business Impact**: Target marketing to secondary cities for growth
 
 **3. Category Correlation with SELIC**
 
-**Finding**: Electronics sales decrease 15% when SELIC rate increases 1%
-
-**Explanation**: Higher interest rates reduce consumer credit for big-ticket items
-
-**Business Impact**: Promote financing during low-rate periods
+* **Finding**: Electronics sales decrease 15% when SELIC rate increases 1%
+* **Explanation**: Higher interest rates reduce consumer credit for big-ticket items
+* **Business Impact**: Promote financing during low-rate periods
 
 **4. Seasonal Economic Patterns**
 
-**Finding**: Economic indicators lag sales changes by ~2 weeks
-
-**Explanation**: Consumer behavior responds faster than published economic data
-
-**Business Impact**: Use sales trends as leading economic indicator
+* **Finding**: Economic indicators lag sales changes by ~2 weeks
+* **Explanation**: Consumer behavior responds faster than published economic data
+* **Business Impact**: Use sales trends as leading economic indicator
 
 ---
 
