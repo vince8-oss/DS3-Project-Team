@@ -1,0 +1,28 @@
+version: 2
+
+sources:
+  - name: brazilian_sales
+    description: "Raw Brazilian e-commerce sales data"
+    database: apc-data-science-and-ai
+    schema: brazilian_sales
+    
+    tables:
+      - name: public-orders
+      - name: public-Order_Items
+      - name: public-order_payments
+      - name: public-Customers
+      - name: public-products
+      - name: public-sellers
+      - name: public-reviews
+      - name: public-Geolocation
+      
+      # NEW: BCB Economic Indicators
+      - name: bcb_economic_indicators
+        description: "Brazilian Central Bank economic indicators (exchange rates, inflation, interest rates)"
+      - name: public-product_category
+        description: "Product category translations (Portuguese to English)"
+        columns:
+          - name: product_category_name
+            description: "Category name in Portuguese"
+          - name: product_category_name_english
+            description: "Category name in English"

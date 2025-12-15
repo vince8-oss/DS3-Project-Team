@@ -1,0 +1,50 @@
+
+default_environment: dev
+project_id: olist_pipeline
+plugins:
+  extractors:
+  - name: tap-csv
+    variant: meltanolabs
+    config:
+      files:
+        - entity: raw_customers
+          path: data/raw/olist_customers_dataset.csv
+          keys: [customer_id]
+        - entity: raw_geolocation
+          path: data/raw/olist_geolocation_dataset.csv
+          keys: [] 
+        - entity: raw_order_items
+          path: data/raw/olist_order_items_dataset.csv
+          keys: [order_id, order_item_id]
+        - entity: raw_payments
+          path: data/raw/olist_order_payments_dataset.csv
+          keys: [order_id, payment_sequential]
+        - entity: raw_order_reviews
+          path: data/raw/olist_order_reviews_dataset.csv
+          keys: [review_id]
+        - entity: raw_orders
+          path: data/raw/olist_orders_dataset.csv
+          keys: [order_id]
+        - entity: raw_products
+          path: data/raw/olist_products_dataset.csv
+          keys: [product_id]
+        - entity: raw_sellers
+          path: data/raw/olist_sellers_dataset.csv
+          keys: [seller_id]
+        - entity: raw_product_category_name_translation
+          path: data/raw/product_category_name_translation.csv
+          keys: [product_category_name]
+  loaders:
+  - name: target-bigquery
+    variant: z3z1ma
+    config:
+      project: $GCP_PROJECT_ID
+      dataset: olist_raw
+      batch_size: 500
+      max_workers: 4
+      timeout: 600
+      fail_fast: false
+environments:
+- name: dev
+  env:
+    GOOGLE_APPLICATION_CREDENTIALS: $GOOGLE_APPLICATION_CREDENTIALS
