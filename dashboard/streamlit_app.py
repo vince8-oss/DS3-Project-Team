@@ -1,15 +1,21 @@
 """
-Brazilian Sales Economic Impact Dashboard
-Interactive visualization of how economic indicators affect sales
+Brazilian Sales Economic Impact Dashboard - English Version
+Interactive visualization with translated category names
 """
 
+import os
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from google.cloud import bigquery
-from datetime import datetime, timedelta
+from datetime import datetime
 import numpy as np
+
+# Configuration from environment variables
+GCP_PROJECT_ID = os.getenv('GCP_PROJECT_ID')
+BQ_DATASET_PROD = os.getenv('BQ_DATASET_PROD', 'brazilian_sales_marts')
+CREDENTIALS_PATH = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
 # Page configuration
 st.set_page_config(
@@ -22,42 +28,53 @@ st.set_page_config(
 @st.cache_resource
 def get_bigquery_client():
     """Initialize BigQuery client"""
-    credentials_path = "/home/eugen/ProjectM2/meltano-bigquery-py311/apc-data-science-and-ai-1c8f5b9e267b.json"
-    return bigquery.Client.from_service_account_json(credentials_path)
+    if not CREDENTIALS_PATH:
+        st.error("GOOGLE_APPLICATION_CREDENTIALS environment variable not set")
+        return None
+    return bigquery.Client.from_service_account_json(CREDENTIALS_PATH)
 
 # Load data with caching
 @st.cache_data(ttl=3600)
 def load_category_data():
-    """Load category performance data"""
+    """Load category performance data with English names"""
     client = get_bigquery_client()
-    query = """
-    SELECT *
-    FROM `apc-data-science-and-ai.brazilian_sales_marts.fct_category_performance_economics`
-    WHERE product_category_name IS NOT NULL
+    query = f"""
+    SELECT
+        category_name,
+        category_name_pt,
+        order_month,
+        customer_state,
+        order_count,
+        total_revenue_brl,
+        total_revenue_usd,
+        avg_order_value_brl,
+        avg_exchange_rate,
+        exchange_rate_period
+    FROM `{GCP_PROJECT_ID}.{BQ_DATASET_PROD}.fct_category_performance_economics`
+    WHERE category_name IS NOT NULL
     ORDER BY order_month DESC
     """
     return client.query(query).to_dataframe()
 
 @st.cache_data(ttl=3600)
 def load_geographic_data():
-    """Load geographic sales data"""
+    """Load geographic sales data with English names"""
     client = get_bigquery_client()
-    query = """
-    SELECT *
-    FROM `apc-data-science-and-ai.brazilian_sales_marts.fct_geographic_sales_economics`
-    WHERE product_category_name IS NOT NULL
+    query = f"""
+    SELECT
+        customer_state,
+        customer_city,
+        order_month,
+        category_name,
+        category_name_pt,
+        order_count,
+        total_revenue_brl,
+        total_revenue_usd,
+        avg_exchange_rate,
+        currency_strength
+    FROM `{GCP_PROJECT_ID}.{BQ_DATASET_PROD}.fct_geographic_sales_economics`
+    WHERE category_name IS NOT NULL
     ORDER BY order_month DESC
-    """
-    return client.query(query).to_dataframe()
-
-@st.cache_data(ttl=3600)
-def load_customer_data():
-    """Load customer purchase data"""
-    client = get_bigquery_client()
-    query = """
-    SELECT *
-    FROM `apc-data-science-and-ai.brazilian_sales_marts.fct_customer_purchases_economics`
-    LIMIT 100000
     """
     return client.query(query).to_dataframe()
 
@@ -66,13 +83,30 @@ def main():
     st.title("🇧🇷 Brazilian E-commerce Economic Impact Dashboard")
     st.markdown("### Analyze how exchange rates, inflation, and interest rates affect sales")
     
-    # Sidebar filters
+    # Language toggle in sidebar
     st.sidebar.header("🔍 Filters")
+    
+    show_language = st.sidebar.radio(
+        "Category Names Language",
+        options=["English", "Portuguese", "Both"],
+        index=0
+    )
     
     # Load data
     with st.spinner("Loading data..."):
         df_category = load_category_data()
         df_geo = load_geographic_data()
+    
+    # Add display column based on language preference
+    if show_language == "English":
+        df_category['display_category'] = df_category['category_name']
+        df_geo['display_category'] = df_geo['category_name']
+    elif show_language == "Portuguese":
+        df_category['display_category'] = df_category['category_name_pt']
+        df_geo['display_category'] = df_geo['category_name_pt']
+    else:  # Both
+        df_category['display_category'] = df_category['category_name'] + ' (' + df_category['category_name_pt'] + ')'
+        df_geo['display_category'] = df_geo['category_name'] + ' (' + df_geo['category_name_pt'] + ')'
     
     # Date range filter
     if not df_category.empty:
@@ -97,8 +131,8 @@ def main():
                 (df_geo['order_month'] <= pd.Timestamp(date_range[1]))
             ]
     
-    # Product category filter
-    categories = sorted(df_category['product_category_name'].unique())
+    # Product category filter (using English names for selection)
+    categories = sorted(df_category['category_name'].unique())
     selected_categories = st.sidebar.multiselect(
         "Product Categories",
         options=categories,
@@ -123,13 +157,13 @@ def main():
     
     # Apply filters
     df_cat_filtered = df_category[
-        (df_category['product_category_name'].isin(selected_categories)) &
+        (df_category['category_name'].isin(selected_categories)) &
         (df_category['exchange_rate_period'].isin(selected_exchange))
     ]
     
     df_geo_filtered = df_geo[
         (df_geo['customer_state'].isin(selected_states)) &
-        (df_geo['product_category_name'].isin(selected_categories))
+        (df_geo['category_name'].isin(selected_categories))
     ]
     
     # Create tabs
@@ -221,7 +255,7 @@ def main():
         st.subheader("Category Performance by Economic Period")
         
         category_comparison = df_cat_filtered.groupby(
-            ['product_category_name', 'exchange_rate_period']
+            ['display_category', 'exchange_rate_period']
         ).agg({
             'order_count': 'sum',
             'total_revenue_usd': 'sum'
@@ -229,19 +263,20 @@ def main():
         
         fig = px.bar(
             category_comparison,
-            x='product_category_name',
+            x='display_category',
             y='total_revenue_usd',
             color='exchange_rate_period',
             title="Revenue by Category and Exchange Rate Period",
-            labels={'total_revenue_usd': 'Revenue (USD)', 'product_category_name': 'Category'},
+            labels={'total_revenue_usd': 'Revenue (USD)', 'display_category': 'Category'},
             barmode='group',
             height=500
         )
+        fig.update_xaxes(tickangle=-45)
         st.plotly_chart(fig, use_container_width=True)
         
         # Top categories
         st.subheader("📊 Top Performing Categories")
-        top_categories = df_cat_filtered.groupby('product_category_name').agg({
+        top_categories = df_cat_filtered.groupby('display_category').agg({
             'order_count': 'sum',
             'total_revenue_usd': 'sum',
             'avg_exchange_rate': 'mean'
@@ -250,10 +285,10 @@ def main():
         fig = px.bar(
             top_categories,
             x='total_revenue_usd',
-            y='product_category_name',
+            y='display_category',
             orientation='h',
             title="Top 10 Categories by Revenue",
-            labels={'total_revenue_usd': 'Revenue (USD)', 'product_category_name': 'Category'},
+            labels={'total_revenue_usd': 'Revenue (USD)', 'display_category': 'Category'},
             color='total_revenue_usd',
             color_continuous_scale='Blues'
         )
@@ -263,11 +298,11 @@ def main():
         st.subheader("📈 Category Trend Over Time")
         selected_cat_trend = st.selectbox(
             "Select category to view trend",
-            options=sorted(selected_categories)
+            options=sorted(df_cat_filtered['display_category'].unique())
         )
         
         cat_trend = df_cat_filtered[
-            df_cat_filtered['product_category_name'] == selected_cat_trend
+            df_cat_filtered['display_category'] == selected_cat_trend
         ].groupby('order_month').agg({
             'order_count': 'sum',
             'total_revenue_usd': 'sum'
@@ -318,7 +353,7 @@ def main():
         st.subheader("🗺️ State Performance Heatmap")
         
         state_category = df_geo_filtered.groupby(
-            ['customer_state', 'product_category_name']
+            ['customer_state', 'display_category']
         ).agg({
             'order_count': 'sum'
         }).reset_index()
@@ -326,7 +361,7 @@ def main():
         # Pivot for heatmap
         heatmap_data = state_category.pivot(
             index='customer_state',
-            columns='product_category_name',
+            columns='display_category',
             values='order_count'
         ).fillna(0)
         
@@ -397,7 +432,7 @@ def main():
         st.subheader("📊 Category Economic Sensitivity")
         
         category_elasticity = df_cat_filtered.groupby(
-            ['product_category_name', 'exchange_rate_period']
+            ['display_category', 'exchange_rate_period']
         ).agg({
             'order_count': 'sum',
             'total_revenue_usd': 'sum'
@@ -405,7 +440,7 @@ def main():
         
         # Calculate variance
         category_variance = category_elasticity.pivot(
-            index='product_category_name',
+            index='display_category',
             columns='exchange_rate_period',
             values='order_count'
         ).fillna(0)
@@ -422,10 +457,10 @@ def main():
             fig = px.bar(
                 elasticity_df,
                 x='elasticity',
-                y='product_category_name',
+                y='display_category',
                 orientation='h',
                 title="Category Sensitivity to Exchange Rate (% Change)",
-                labels={'elasticity': 'Change (%)', 'product_category_name': 'Category'},
+                labels={'elasticity': 'Change (%)', 'display_category': 'Category'},
                 color='elasticity',
                 color_continuous_scale='RdYlGn_r'
             )
