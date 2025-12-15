@@ -65,18 +65,6 @@ This project demonstrates a **data engineering pipeline** that analyzes 99,000+ 
 
 **The Impact**: Data-driven insights for inventory planning, pricing strategy, and market expansion
 
-### Project Metrics
-
-| Metric | Value |
-|--------|-------|
-| **Orders Analyzed** | 99,441 |
-| **Total Data Rows** | 450,000+ |
-| **dbt Models** | 10 (6 staging + 4 marts) |
-| **Data Quality Tests** | 45+ |
-| **Pipeline Execution Time** | <5 minutes |
-| **Dashboard Load Time** | <2 seconds |
-| **Automation Savings** | 23 min/day |
-
 ### Technical Highlights
 
 - **Modern Data Stack**: Meltano → BigQuery → dbt → Dagster → Streamlit
