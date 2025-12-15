@@ -36,12 +36,6 @@
 - [Key Features](#-key-features)
 - [Business Insights](#-business-insights)
 
-### Quality & Testing
-- [Testing Strategy](#-testing--quality)
-- [Data Quality](#data-quality-metrics)
-- [Code Quality](#code-quality-tools)
-
-
 ### Reference
 - [Performance Metrics](#-performance-metrics)
 - [Troubleshooting](#-troubleshooting)
@@ -66,6 +60,7 @@ This project demonstrates a **data engineering pipeline** that analyzes 99,000+ 
 - **Analysis**: Advanced SQL transformations showing economic correlation
 
 **The Impact**: Data-driven insights for inventory planning, pricing strategy, and market expansion
+
 
 ### Technical Highlights
 
@@ -236,9 +231,6 @@ DS3-Project-Team/
 ├── config/                    # Configuration files
 │   ├── dbt_profiles.yml      # dbt connection profiles template
 │   └── dagster.yaml          # Dagster configuration
-│
-├── docs/                      # Additional documentation
-│   └── PRESENTATION_GUIDE.md # Legacy presentation guide
 │
 ├── notebook/                  # Jupyter notebooks (exploratory)
 │   └── olist_pipeline_nodbt.ipynb
@@ -489,83 +481,6 @@ dagster asset materialize --select "*"
 ```bash
 dagster job execute bcb_economic_indicators
 ```
-
----
-
-## ✨ Fusing Sales and Economic Data
-
-### 1. Economic Context Integration
-
-Unlike typical e-commerce dashboards, this platform correlates sales with:
-
-**Exchange Rates** (USD/BRL):
-- Impact on international buyer purchasing power
-- Correlation: 10% BRL depreciation → 7% domestic sales increase
-
-**Inflation** (IPCA):
-- Consumer purchasing power erosion
-- Essential vs. luxury category sensitivity
-
-**Interest Rates** (SELIC):
-- Credit availability and consumer financing
-- Strong correlation with durable goods (electronics, furniture)
-
-### 2. Category Translation Engine
-
-All Portuguese product categories automatically translated:
-
-| Portuguese | English | Orders |
-|------------|---------|--------|
-| `beleza_saude` | Health & Beauty | 10.2K |
-| `cama_mesa_banho` | Bed, Bath & Table | 8.9K |
-| `moveis_decoracao` | Furniture & Decor | 7.3K |
-| `esporte_lazer` | Sports & Leisure | 6.8K |
-
-Total: 71 categories translated
-
-### 3. Production-Grade Quality
-
-**Data Quality**:
-- 45+ dbt tests (uniqueness, not null, relationships)
-- Custom business logic tests via macros
-- Schema validation and type checking
-- Automated test runs on every transformation
-
-**Code Quality**:
-- Type hints throughout Python code
-- Security scanning with Bandit
-- Linting with Flake8
-- Formatting with Black
-- Pre-commit hooks configured
-
-### 4. Automated Orchestration
-
-**Dagster Schedules**:
-- **2:00 AM** - Extract economic data from BCB
-- **3:00 AM** - Refresh staging models
-- **4:00 AM** - Rebuild analytical marts
-- **5:00 AM** - Run data quality tests
-
-**Benefits**:
-- 23 minutes/day saved (manual → automated)
-- 99.5% reliability over 3-month period
-- Automatic failure alerts
-- Complete execution history
-
-### 5. Scalable Cloud Architecture
-
-**Cloud-Native Design**:
-- Serverless BigQuery (scales to petabytes)
-- No infrastructure management
-- Pay-per-query pricing
-- Built-in replication and backup
-
-**Performance Optimizations**:
-- Table partitioning by date
-- Clustering on frequently filtered columns
-- Materialized views for aggregations
-- Incremental dbt models (future enhancement)
-
 ---
 
 ## 🔍 Business Insights
