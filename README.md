@@ -67,7 +67,6 @@ This project demonstrates a **data engineering pipeline** that analyzes 99,000+ 
 
 **The Impact**: Data-driven insights for inventory planning, pricing strategy, and market expansion
 
-
 ### Technical Highlights
 
 - **Modern Data Stack**: Meltano → BigQuery → dbt → Dagster → Streamlit
