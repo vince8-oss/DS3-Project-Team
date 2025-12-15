@@ -1,6 +1,6 @@
-# 🇧🇷 Brazilian E-Commerce Analytics Platform
+# 🇧🇷 Brazilian E-Commerce Analytics
 
-> **Production-grade data engineering pipeline** analyzing Brazilian e-commerce sales with macroeconomic indicators from the Brazilian Central Bank.
+> **Data engineering pipeline** analyzing Brazilian e-commerce sales with macroeconomic indicators.
 
 [![dbt](https://img.shields.io/badge/dbt-1.10.15-orange)](https://www.getdbt.com/)
 [![Dagster](https://img.shields.io/badge/Dagster-1.5.11-blue)](https://dagster.io/)
@@ -56,7 +56,7 @@
 
 ## 🎯 Overview
 
-This project demonstrates a **production-grade data engineering pipeline** that analyzes 99,000+ Brazilian e-commerce orders alongside macroeconomic indicators to understand how exchange rates, inflation, and interest rates impact sales performance.
+This project demonstrates a **data engineering pipeline** that analyzes 99,000+ Brazilian e-commerce orders alongside macroeconomic indicators to understand how exchange rates, inflation, and interest rates impact sales performance.
 
 ### Business Context
 
@@ -106,7 +106,7 @@ This project demonstrates a **production-grade data engineering pipeline** that 
 
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/azniosman/DS3-Project-Team.git
 cd DS3-Project-Team
 
 # Run automated setup
@@ -998,40 +998,9 @@ This project is for **educational purposes only** as part of the NTU Data Scienc
 - **Olist Dataset**: [CC BY-NC-SA 4.0](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
 - **BCB API**: Public data, no authentication required
 
-### Authors
-
-**NTU Data Science & AI Program**
-- **Module 1**: Olist Transform Pipeline (Basic ELT)
-- **Module 2**: Brazilian Sales Analytics with Economic Context
-- **Unified Version**: Combined and refactored for class presentation (December 2025)
-
-### Acknowledgments
-
-- Olist for providing the Brazilian e-commerce dataset
-- Brazilian Central Bank for open economic data API
-- dbt Labs, Dagster, and Streamlit teams for excellent open-source tools
-
----
-
-## 🎉 Project Status
-
-**Version**: 2.0.0 (Unified)
-**Last Updated**: December 15, 2025
-**Status**: ✅ **Production Ready**
-**Git Branch**: `refactor-unified-pipeline`
-
-**What's Next**:
-1. ✅ Complete pipeline refactoring
-2. ✅ Comprehensive documentation
-3. ✅ Automated setup and execution scripts
-4. ✅ Production-ready code quality
-5. 🎯 **Ready for class presentation!**
-
 ---
 
 <div align="center">
-
-**Built with ❤️ using the Modern Data Stack**
 
 [↑ Back to Top](#-brazilian-e-commerce-analytics-platform)
 
