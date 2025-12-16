@@ -41,6 +41,7 @@ streamlit-aggrid==0.3.4
 plotly==5.18.0
 matplotlib==3.8.2
 seaborn==0.13.0
+statsmodels==0.14.6
 
 # ============================================================================
 # DATA EXTRACTION
