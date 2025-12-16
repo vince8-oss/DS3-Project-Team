@@ -145,6 +145,7 @@ reports/
 # ----------------------
 # docs/
 .az-notes
+dashboard/archive
 
 # ----------------------
 # Credentials & Secrets
