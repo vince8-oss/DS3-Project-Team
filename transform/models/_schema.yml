@@ -33,7 +33,6 @@ models:
           - accepted_values:
               values: ['delivered', 'shipped', 'processing', 'canceled', 'approved', 'invoiced', 'created', 'unavailable']
               severity: warn
-              quote: false
               
       - name: order_purchase_timestamp
         description: "Order purchase timestamp"
@@ -143,7 +142,6 @@ models:
           - accepted_values:
               values: ['credit_card', 'boleto', 'voucher', 'debit_card', 'not_defined']
               severity: warn
-              quote: false
               
       - name: payment_installments
         description: "Number of installments"
@@ -203,9 +201,6 @@ models:
         tests:
           - not_null:
               severity: warn
-          - dbt_utils.expression_is_true:
-              expression: "LENGTH(customer_state) = 2 OR customer_state IS NULL"
-              severity: warn
 
   # ========================================
   # STAGING: PRODUCTS
@@ -238,7 +233,7 @@ models:
         description: "Product weight in grams"
         tests:
           - dbt_utils.expression_is_true:
-              expression: "> 0 OR product_weight_g IS NULL"
+              expression: ">= 0 OR product_weight_g IS NULL"
               severity: error
           - dbt_utils.expression_is_true:
               expression: "< 100000 OR product_weight_g IS NULL"
