@@ -241,15 +241,15 @@ def main():
             ]
     
     # Product category filter (using English names for selection)
-    categories = sorted(df_category['category_name'].unique())
+    categories = sorted([x for x in df_category['category_name'].unique() if x is not None and pd.notna(x)])
     selected_categories = st.sidebar.multiselect(
         "Product Categories",
         options=categories,
         default=categories[:5] if len(categories) > 5 else categories
     )
-    
+
     # State filter
-    states = sorted(df_geo['customer_state'].unique())
+    states = sorted([x for x in df_geo['customer_state'].unique() if x is not None and pd.notna(x)])
     selected_states = st.sidebar.multiselect(
         "States",
         options=states,
@@ -557,12 +557,61 @@ def main():
             color_continuous_scale='Blues'
         )
         st.plotly_chart(fig, use_container_width=True)
-        
+
+        # Category Treemap
+        st.subheader("🗂️ Category Revenue Distribution (Treemap)")
+
+        category_totals = df_cat_filtered.groupby('display_category').agg({
+            'total_revenue_usd': 'sum',
+            'order_count': 'sum'
+        }).reset_index()
+
+        fig = px.treemap(
+            category_totals,
+            path=['display_category'],
+            values='total_revenue_usd',
+            title="Category Revenue Treemap",
+            color='total_revenue_usd',
+            color_continuous_scale='Blues',
+            hover_data={
+                'total_revenue_usd': ':$,.0f',
+                'order_count': ':,',
+            }
+        )
+        fig.update_traces(textinfo="label+value+percent parent")
+        fig.update_layout(height=500)
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Category Distribution Pie Chart
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Revenue distribution
+            fig = px.pie(
+                category_totals.head(10),
+                values='total_revenue_usd',
+                names='display_category',
+                title="Revenue Share (Top 10 Categories)",
+                hole=0.4
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+        with col2:
+            # Order count distribution
+            fig = px.pie(
+                category_totals.head(10),
+                values='order_count',
+                names='display_category',
+                title="Order Count Share (Top 10 Categories)",
+                hole=0.4
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
         # Category trend
         st.subheader("📈 Category Trend Over Time")
         selected_cat_trend = st.selectbox(
             "Select category to view trend",
-            options=sorted(df_cat_filtered['display_category'].unique())
+            options=sorted([x for x in df_cat_filtered['display_category'].unique() if x is not None and pd.notna(x)])
         )
         
         cat_trend = df_cat_filtered[
@@ -638,7 +687,7 @@ def main():
             if 'display_category' in df_products.columns and len(df_products['display_category'].unique()) > 0:
                 selected_prod_category = st.selectbox(
                     "Select Category",
-                    options=sorted(df_products['display_category'].unique()),
+                    options=sorted([x for x in df_products['display_category'].unique() if x is not None and pd.notna(x)]),
                     key="product_category_selector"
                 )
 
@@ -665,6 +714,65 @@ def main():
                     st.dataframe(category_products[display_cols], use_container_width=True)
             else:
                 st.info("No product categories available to display.")
+
+            # Freight Cost Analysis
+            st.subheader("📦 Freight Cost Analysis")
+
+            if 'avg_freight_percentage' in df_products.columns:
+                # Top products by freight percentage
+                high_freight_products = df_products.nlargest(20, 'avg_freight_percentage')
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    fig = px.bar(
+                        high_freight_products,
+                        x='avg_freight_percentage',
+                        y='product_id',
+                        orientation='h',
+                        title="Top 20 Products by Freight % (of Price)",
+                        labels={'avg_freight_percentage': 'Freight %', 'product_id': 'Product ID'},
+                        color='avg_freight_percentage',
+                        color_continuous_scale='Reds'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+
+                with col2:
+                    # Freight % by category
+                    freight_by_category = df_products.groupby('display_category').agg({
+                        'avg_freight_percentage': 'mean',
+                        'total_freight_brl': 'sum'
+                    }).reset_index().sort_values('avg_freight_percentage', ascending=False).head(10)
+
+                    fig = px.bar(
+                        freight_by_category,
+                        x='avg_freight_percentage',
+                        y='display_category',
+                        orientation='h',
+                        title="Top 10 Categories by Avg Freight %",
+                        labels={'avg_freight_percentage': 'Avg Freight %', 'display_category': 'Category'},
+                        color='avg_freight_percentage',
+                        color_continuous_scale='Oranges'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+
+                # Freight impact analysis
+                st.markdown("**Freight Impact Insights:**")
+                avg_freight_pct = df_products['avg_freight_percentage'].mean()
+                high_freight_categories = freight_by_category.head(3)['display_category'].tolist()
+
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Avg Freight % of Price", f"{avg_freight_pct:.1f}%")
+                with col2:
+                    total_freight_cost = df_products['total_freight_brl'].sum()
+                    st.metric("Total Freight Cost (BRL)", f"R${total_freight_cost:,.0f}")
+                with col3:
+                    high_freight_count = len(df_products[df_products['avg_freight_percentage'] > 20])
+                    st.metric("Products with >20% Freight", high_freight_count)
+
+                if high_freight_categories:
+                    st.info(f"**High Freight Categories**: {', '.join(high_freight_categories[:3])}")
         else:
             st.info("Product data not available. Build the mart first: `dbt run --select fct_product_performance`")
 
@@ -969,7 +1077,111 @@ def main():
             labels={'total_revenue_usd': 'Revenue (USD)', 'city_state': 'City'}
         )
         st.plotly_chart(fig, use_container_width=True)
-    
+
+        # Regional Performance Comparison
+        st.subheader("🗺️ Regional Performance Analysis")
+
+        # Brazilian regions mapping
+        region_mapping = {
+            # North
+            'AC': 'North', 'AP': 'North', 'AM': 'North', 'PA': 'North',
+            'RO': 'North', 'RR': 'North', 'TO': 'North',
+            # Northeast
+            'AL': 'Northeast', 'BA': 'Northeast', 'CE': 'Northeast',
+            'MA': 'Northeast', 'PB': 'Northeast', 'PE': 'Northeast',
+            'PI': 'Northeast', 'RN': 'Northeast', 'SE': 'Northeast',
+            # Central-West
+            'DF': 'Central-West', 'GO': 'Central-West',
+            'MT': 'Central-West', 'MS': 'Central-West',
+            # Southeast
+            'ES': 'Southeast', 'MG': 'Southeast',
+            'RJ': 'Southeast', 'SP': 'Southeast',
+            # South
+            'PR': 'South', 'RS': 'South', 'SC': 'South'
+        }
+
+        # Add region to geographic data
+        state_sales_regional = state_sales.copy()
+        state_sales_regional['region'] = state_sales_regional['customer_state'].map(region_mapping)
+
+        # Regional aggregation
+        regional_sales = state_sales_regional.groupby('region').agg({
+            'order_count': 'sum',
+            'total_revenue_usd': 'sum'
+        }).reset_index().sort_values('total_revenue_usd', ascending=False)
+
+        regional_sales['avg_order_value'] = regional_sales['total_revenue_usd'] / regional_sales['order_count']
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            fig = px.bar(
+                regional_sales,
+                x='region',
+                y='total_revenue_usd',
+                title="Revenue by Region",
+                labels={'total_revenue_usd': 'Revenue (USD)', 'region': 'Region'},
+                color='region',
+                text='total_revenue_usd'
+            )
+            fig.update_traces(texttemplate='$%{text:,.0f}', textposition='outside')
+            st.plotly_chart(fig, use_container_width=True)
+
+        with col2:
+            fig = px.bar(
+                regional_sales,
+                x='region',
+                y='order_count',
+                title="Orders by Region",
+                labels={'order_count': 'Order Count', 'region': 'Region'},
+                color='region',
+                text='order_count'
+            )
+            fig.update_traces(texttemplate='%{text:,}', textposition='outside')
+            st.plotly_chart(fig, use_container_width=True)
+
+        # Regional comparison table
+        st.subheader("Regional Comparison Table")
+        regional_sales['revenue_share_%'] = (regional_sales['total_revenue_usd'] / regional_sales['total_revenue_usd'].sum() * 100).round(2)
+        regional_sales['orders_share_%'] = (regional_sales['order_count'] / regional_sales['order_count'].sum() * 100).round(2)
+
+        display_regional = regional_sales[['region', 'total_revenue_usd', 'revenue_share_%',
+                                          'order_count', 'orders_share_%', 'avg_order_value']].copy()
+
+        st.dataframe(display_regional.style.format({
+            'total_revenue_usd': '${:,.0f}',
+            'revenue_share_%': '{:.2f}%',
+            'order_count': '{:,.0f}',
+            'orders_share_%': '{:.2f}%',
+            'avg_order_value': '${:,.2f}'
+        }), use_container_width=True)
+
+        # State-level breakdown by region
+        st.subheader("State Performance by Region")
+
+        selected_region = st.selectbox(
+            "Select Region",
+            options=sorted(region_mapping.values()),
+            key="region_selector"
+        )
+
+        states_in_region = [state for state, region in region_mapping.items() if region == selected_region]
+        region_state_sales = state_sales_regional[
+            state_sales_regional['customer_state'].isin(states_in_region)
+        ].sort_values('total_revenue_usd', ascending=False)
+
+        fig = px.bar(
+            region_state_sales,
+            x='total_revenue_usd',
+            y='customer_state',
+            orientation='h',
+            title=f"States in {selected_region} Region by Revenue",
+            labels={'total_revenue_usd': 'Revenue (USD)', 'customer_state': 'State'},
+            color='total_revenue_usd',
+            color_continuous_scale='Blues'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
     # TAB 7: Economic Impact
     with tab7:
         st.header("💱 Economic Indicators Impact")
@@ -1176,7 +1388,125 @@ def main():
             - **Negative values**: Category sells LESS during weak BRL (counter-cyclical)
             - **Near zero**: Stable category regardless of exchange rate
             """)
-        
+
+        # Enhanced Multi-Indicator Sensitivity Analysis
+        if not df_time_series.empty:
+            st.subheader("🔍 Multi-Indicator Sensitivity Analysis")
+            st.markdown("Analyze how categories respond to different economic indicators")
+
+            # Merge category data with time series to get all indicators
+            if 'order_month' in df_cat_filtered.columns and 'order_date' in df_time_series.columns:
+                # Convert to same format for joining
+                df_cat_with_indicators = df_cat_filtered.copy()
+                df_cat_with_indicators['order_date'] = pd.to_datetime(df_cat_with_indicators['order_month'])
+
+                # Get monthly averages of economic indicators
+                monthly_indicators = df_time_series.groupby([
+                    df_time_series['order_date'].dt.to_period('M')
+                ]).agg({
+                    'avg_exchange_rate': 'mean',
+                    'inflation_rate': 'mean',
+                    'interest_rate': 'mean',
+                    'daily_revenue_usd': 'sum'
+                }).reset_index()
+                monthly_indicators['order_month'] = monthly_indicators['order_date'].dt.to_timestamp()
+
+                # Calculate correlations by category
+                category_correlations = []
+
+                for category in df_cat_with_indicators['display_category'].unique():
+                    if pd.notna(category):
+                        cat_data = df_cat_with_indicators[
+                            df_cat_with_indicators['display_category'] == category
+                        ].groupby('order_month').agg({
+                            'total_revenue_usd': 'sum',
+                            'order_count': 'sum'
+                        }).reset_index()
+
+                        if len(cat_data) > 3:  # Need at least 3 data points
+                            # Merge with indicators
+                            merged = cat_data.merge(
+                                monthly_indicators[['order_month', 'avg_exchange_rate', 'inflation_rate', 'interest_rate']],
+                                on='order_month',
+                                how='left'
+                            ).dropna()
+
+                            if len(merged) > 2:
+                                corr_exchange = merged['total_revenue_usd'].corr(merged['avg_exchange_rate'])
+                                corr_inflation = merged['total_revenue_usd'].corr(merged['inflation_rate'])
+                                corr_interest = merged['total_revenue_usd'].corr(merged['interest_rate'])
+
+                                category_correlations.append({
+                                    'category': category,
+                                    'exchange_rate_corr': corr_exchange,
+                                    'inflation_corr': corr_inflation,
+                                    'interest_rate_corr': corr_interest
+                                })
+
+                if category_correlations:
+                    corr_df = pd.DataFrame(category_correlations)
+
+                    # Selector for indicator
+                    indicator = st.selectbox(
+                        "Select Economic Indicator",
+                        options=['Exchange Rate (USD/BRL)', 'Inflation (IPCA)', 'Interest Rate (SELIC)'],
+                        key="indicator_selector"
+                    )
+
+                    indicator_col_map = {
+                        'Exchange Rate (USD/BRL)': 'exchange_rate_corr',
+                        'Inflation (IPCA)': 'inflation_corr',
+                        'Interest Rate (SELIC)': 'interest_rate_corr'
+                    }
+
+                    selected_col = indicator_col_map[indicator]
+
+                    # Sort and display
+                    corr_display = corr_df.sort_values(selected_col, ascending=False).head(15)
+
+                    fig = px.bar(
+                        corr_display,
+                        x=selected_col,
+                        y='category',
+                        orientation='h',
+                        title=f"Category Correlation with {indicator}",
+                        labels={selected_col: 'Correlation Coefficient', 'category': 'Category'},
+                        color=selected_col,
+                        color_continuous_scale='RdBu',
+                        range_color=[-1, 1]
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+
+                    st.info(f"""
+                    **Correlation Interpretation ({indicator}):**
+                    - **Positive (> 0.5)**: Strong positive relationship - sales increase when {indicator.split('(')[0].strip()} increases
+                    - **Negative (< -0.5)**: Strong negative relationship - sales decrease when {indicator.split('(')[0].strip()} increases
+                    - **Near Zero (-0.3 to 0.3)**: Weak or no relationship with {indicator.split('(')[0].strip()}
+                    """)
+
+                    # Heatmap of all correlations
+                    st.subheader("Category Sensitivity Heatmap")
+
+                    # Prepare data for heatmap
+                    heatmap_data = corr_df.set_index('category')[
+                        ['exchange_rate_corr', 'inflation_corr', 'interest_rate_corr']
+                    ].head(15)
+
+                    heatmap_data.columns = ['Exchange Rate', 'Inflation (IPCA)', 'Interest Rate (SELIC)']
+
+                    fig = px.imshow(
+                        heatmap_data.T,
+                        title="Economic Indicator Sensitivity by Category",
+                        labels=dict(x="Category", y="Economic Indicator", color="Correlation"),
+                        color_continuous_scale='RdBu',
+                        zmin=-1,
+                        zmax=1,
+                        text_auto='.2f',
+                        aspect='auto'
+                    )
+                    fig.update_xaxes(tickangle=-45)
+                    st.plotly_chart(fig, use_container_width=True)
+
         # Raw data view
         st.subheader("📋 Detailed Data")
         if st.checkbox("Show raw data"):
