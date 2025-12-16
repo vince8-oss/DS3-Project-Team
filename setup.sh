@@ -55,7 +55,7 @@ fi
 
 # Install Python dependencies using uv
 echo -e "${YELLOW}[1/3] Installing Python dependencies with uv...${NC}"
-if uv pip install --reinstall-package snowplow-tracker --reinstall-package kaggle -r requirements.txt; then
+if uv pip install -r requirements.txt; then
     echo -e "${GREEN}✓ Python dependencies installed.${NC}\n"
 else
     error_exit "Failed to install Python dependencies."
@@ -63,9 +63,41 @@ fi
 
 # Verify critical packages are installed
 echo -e "${YELLOW}Verifying installation...${NC}"
-python -c "import dbt.cli.main; import kaggle; import dotenv" 2>/dev/null || \
-    error_exit "Critical packages not installed correctly. Please check the output above."
-echo -e "${GREEN}✓ Critical packages verified.${NC}\n"
+
+# Test dbt command
+if ! command -v dbt &> /dev/null; then
+    error_exit "dbt command not found. dbt-core may not be installed correctly."
+fi
+
+# Test dbt version to ensure it's working
+DBT_VERSION=$(dbt --version 2>&1 | head -1)
+if [[ $? -ne 0 ]]; then
+    error_exit "dbt command failed. Please check the installation."
+fi
+echo -e "  ${GREEN}✓${NC} dbt: ${DBT_VERSION}"
+
+# Verify Python packages
+MISSING_PACKAGES=()
+
+if ! python -c "import kaggle" 2>/dev/null; then
+    MISSING_PACKAGES+=("kaggle")
+fi
+
+if ! python -c "import dotenv" 2>/dev/null; then
+    MISSING_PACKAGES+=("python-dotenv")
+fi
+
+if ! python -c "import google.cloud.bigquery" 2>/dev/null; then
+    MISSING_PACKAGES+=("google-cloud-bigquery")
+fi
+
+if [ ${#MISSING_PACKAGES[@]} -ne 0 ]; then
+    echo -e "${RED}✗ Missing packages: ${MISSING_PACKAGES[*]}${NC}"
+    error_exit "Some critical packages are not installed. Please check the output above."
+fi
+
+echo -e "  ${GREEN}✓${NC} Python packages: kaggle, dotenv, google-cloud-bigquery"
+echo -e "${GREEN}✓ All critical packages verified.${NC}\n"
 
 # Install dbt dependencies
 echo -e "${YELLOW}[2/3] Installing dbt packages...${NC}"
@@ -79,6 +111,19 @@ if [ ! -f "packages.yml" ]; then
     echo -e "${YELLOW}⚠ No packages.yml found, skipping dbt deps...${NC}\n"
     cd ..
 else
+    # Fix permissions on dbt_packages if it exists
+    if [ -d "dbt_packages" ]; then
+        echo -e "${YELLOW}  Cleaning existing dbt_packages directory...${NC}"
+        chmod -R u+w dbt_packages 2>/dev/null || true
+        rm -rf dbt_packages 2>/dev/null || {
+            echo -e "${YELLOW}  ⚠ Could not remove dbt_packages, trying with sudo...${NC}"
+            sudo rm -rf dbt_packages || {
+                cd ..
+                error_exit "Failed to remove dbt_packages directory. Please run: sudo rm -rf transform/dbt_packages"
+            }
+        }
+    fi
+
     if dbt deps; then
         echo -e "${GREEN}✓ dbt packages installed.${NC}\n"
     else
