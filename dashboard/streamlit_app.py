@@ -773,6 +773,114 @@ def main():
 
                 if high_freight_categories:
                     st.info(f"**High Freight Categories**: {', '.join(high_freight_categories[:3])}")
+
+            # Product Dimensions Analysis
+            st.subheader("📏 Product Dimensions Impact on Freight")
+
+            if all(col in df_products.columns for col in ['product_weight_g', 'volumetric_weight_kg', 'avg_freight_percentage']):
+                # Filter products with dimension data
+                dims_data = df_products[
+                    df_products['product_weight_g'].notna() &
+                    df_products['volumetric_weight_kg'].notna()
+                ].copy()
+
+                if not dims_data.empty:
+                    # Weight vs Freight correlation
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        fig = px.scatter(
+                            dims_data.head(200),
+                            x='product_weight_g',
+                            y='avg_freight_percentage',
+                            color='display_category',
+                            title="Product Weight vs Freight % (Top 200 Products)",
+                            labels={
+                                'product_weight_g': 'Weight (grams)',
+                                'avg_freight_percentage': 'Freight % of Price',
+                                'display_category': 'Category'
+                            },
+                            hover_data=['product_id', 'total_revenue_usd']
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+
+                    with col2:
+                        fig = px.scatter(
+                            dims_data.head(200),
+                            x='volumetric_weight_kg',
+                            y='avg_freight_percentage',
+                            color='display_category',
+                            title="Volumetric Weight vs Freight % (Top 200)",
+                            labels={
+                                'volumetric_weight_kg': 'Volumetric Weight (kg)',
+                                'avg_freight_percentage': 'Freight % of Price',
+                                'display_category': 'Category'
+                            },
+                            hover_data=['product_id', 'total_revenue_usd']
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+
+                    # Dimensions insights
+                    st.markdown("**Dimensions vs Freight Insights:**")
+
+                    # Calculate correlations
+                    weight_corr = dims_data['product_weight_g'].corr(dims_data['avg_freight_percentage'])
+                    vol_corr = dims_data['volumetric_weight_kg'].corr(dims_data['avg_freight_percentage'])
+
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        avg_weight = dims_data['product_weight_g'].mean()
+                        st.metric("Avg Product Weight", f"{avg_weight:,.0f} g")
+
+                    with col2:
+                        avg_vol_weight = dims_data['volumetric_weight_kg'].mean()
+                        st.metric("Avg Volumetric Weight", f"{avg_vol_weight:.2f} kg")
+
+                    with col3:
+                        heavy_products = len(dims_data[dims_data['product_weight_g'] > 5000])
+                        st.metric("Heavy Products (>5kg)", heavy_products)
+
+                    st.info(f"""
+                    **Correlation Analysis:**
+                    - Weight vs Freight %: {weight_corr:.3f}
+                    - Volumetric Weight vs Freight %: {vol_corr:.3f}
+                    - {'Strong' if abs(weight_corr) > 0.5 else 'Weak'} correlation between actual weight and freight cost
+                    - {'Volumetric' if abs(vol_corr) > abs(weight_corr) else 'Actual'} weight appears more influential
+                    """)
+
+                    # Freight optimization opportunities
+                    st.subheader("📦 Freight Optimization Opportunities")
+
+                    # Identify products with high volumetric vs actual weight ratio
+                    dims_data['vol_to_actual_ratio'] = dims_data['volumetric_weight_kg'] / (dims_data['product_weight_g'] / 1000)
+                    inefficient_products = dims_data[dims_data['vol_to_actual_ratio'] > 2].nlargest(10, 'total_revenue_usd')
+
+                    if not inefficient_products.empty:
+                        fig = px.bar(
+                            inefficient_products,
+                            x='vol_to_actual_ratio',
+                            y='product_id',
+                            orientation='h',
+                            title="Top 10 Products with High Volume-to-Weight Ratio (Packaging Optimization Opportunities)",
+                            labels={
+                                'vol_to_actual_ratio': 'Volumetric / Actual Weight Ratio',
+                                'product_id': 'Product ID'
+                            },
+                            color='vol_to_actual_ratio',
+                            color_continuous_scale='Reds',
+                            hover_data=['display_category', 'total_revenue_usd']
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+
+                        st.warning(f"""
+                        **Optimization Alert:**
+                        Found {len(inefficient_products)} high-revenue products with excessive packaging (vol/weight ratio > 2).
+                        Optimizing packaging for these products could reduce freight costs significantly.
+                        """)
+                else:
+                    st.info("Product dimension data not available for analysis")
+
         else:
             st.info("Product data not available. Build the mart first: `dbt run --select fct_product_performance`")
 
@@ -926,6 +1034,119 @@ def main():
             fig.update_layout(height=600)
             st.plotly_chart(fig, use_container_width=True)
 
+            # Customer Cohort Retention Analysis
+            st.subheader("📅 Customer Cohort Retention Analysis")
+
+            if 'first_order_date' in df_customers.columns and 'last_order_date' in df_customers.columns:
+                # Create cohort data from customer segments
+                cohort_data = df_customers.copy()
+                cohort_data['first_order_month'] = pd.to_datetime(cohort_data['first_order_date']).dt.to_period('M')
+                cohort_data['last_order_month'] = pd.to_datetime(cohort_data['last_order_date']).dt.to_period('M')
+
+                # Calculate cohort periods
+                cohort_data['cohort_periods'] = (
+                    cohort_data['last_order_month'] - cohort_data['first_order_month']
+                ).apply(lambda x: x.n if pd.notna(x) else 0)
+
+                # Group by cohort
+                cohort_grouped = cohort_data.groupby('first_order_month').agg({
+                    'customer_unique_id': 'count',
+                    'total_spent_usd': 'sum'
+                }).reset_index()
+                cohort_grouped.columns = ['cohort_month', 'customer_count', 'cohort_revenue']
+
+                # Calculate retention by cohort and period
+                retention_data = []
+                for cohort in cohort_data['first_order_month'].unique():
+                    if pd.notna(cohort):
+                        cohort_customers = cohort_data[cohort_data['first_order_month'] == cohort]
+                        total_customers = len(cohort_customers)
+
+                        for period in range(0, 13):  # 0-12 months
+                            retained = len(cohort_customers[cohort_customers['cohort_periods'] >= period])
+                            retention_rate = (retained / total_customers * 100) if total_customers > 0 else 0
+
+                            retention_data.append({
+                                'cohort': str(cohort),
+                                'period': period,
+                                'retention_rate': retention_rate,
+                                'customers_retained': retained
+                            })
+
+                if retention_data:
+                    retention_df = pd.DataFrame(retention_data)
+
+                    # Pivot for heatmap
+                    retention_pivot = retention_df.pivot(
+                        index='cohort',
+                        columns='period',
+                        values='retention_rate'
+                    ).fillna(0)
+
+                    # Sort by cohort (most recent first)
+                    retention_pivot = retention_pivot.sort_index(ascending=False)
+
+                    # Cohort retention heatmap
+                    fig = px.imshow(
+                        retention_pivot,
+                        title="Cohort Retention Heatmap (%)",
+                        labels=dict(x="Months Since First Purchase", y="Cohort Month", color="Retention %"),
+                        color_continuous_scale='RdYlGn',
+                        zmin=0,
+                        zmax=100,
+                        text_auto='.0f',
+                        aspect='auto'
+                    )
+                    fig.update_layout(height=500)
+                    st.plotly_chart(fig, use_container_width=True)
+
+                    # Cohort retention curves
+                    st.subheader("Cohort Retention Curves")
+
+                    # Select top 6 cohorts for clarity
+                    top_cohorts = retention_pivot.head(6).index.tolist()
+                    retention_curves = retention_df[retention_df['cohort'].isin([str(c) for c in top_cohorts])]
+
+                    fig = px.line(
+                        retention_curves,
+                        x='period',
+                        y='retention_rate',
+                        color='cohort',
+                        title="Retention Curves by Cohort (Top 6 Recent Cohorts)",
+                        labels={
+                            'period': 'Months Since First Purchase',
+                            'retention_rate': 'Retention Rate (%)',
+                            'cohort': 'Cohort Month'
+                        },
+                        markers=True
+                    )
+                    fig.update_layout(height=400, hovermode='x unified')
+                    fig.update_yaxes(range=[0, 105])
+                    st.plotly_chart(fig, use_container_width=True)
+
+                    # Cohort insights
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        avg_1month = retention_pivot[1].mean() if 1 in retention_pivot.columns else 0
+                        st.metric("Avg 1-Month Retention", f"{avg_1month:.1f}%")
+
+                    with col2:
+                        avg_3month = retention_pivot[3].mean() if 3 in retention_pivot.columns else 0
+                        st.metric("Avg 3-Month Retention", f"{avg_3month:.1f}%")
+
+                    with col3:
+                        avg_6month = retention_pivot[6].mean() if 6 in retention_pivot.columns else 0
+                        st.metric("Avg 6-Month Retention", f"{avg_6month:.1f}%")
+
+                    st.info("""
+                    **Cohort Retention Insights:**
+                    - Each row represents a cohort (customers who made first purchase in that month)
+                    - Each column shows retention after N months
+                    - 100% at period 0 = all customers in cohort
+                    - Declining values show how many customers returned over time
+                    """)
+
         else:
             st.info("Customer segments data not available. Build the mart first: `dbt run --select fct_customer_segments`")
 
@@ -1077,6 +1298,57 @@ def main():
             labels={'total_revenue_usd': 'Revenue (USD)', 'city_state': 'City'}
         )
         st.plotly_chart(fig, use_container_width=True)
+
+        # City-Level Bubble Map
+        st.subheader("🎈 City-Level Bubble Map")
+
+        # Get all cities with their metrics
+        all_city_sales = df_geo_filtered.groupby(['customer_state', 'customer_city']).agg({
+            'order_count': 'sum',
+            'total_revenue_usd': 'sum'
+        }).reset_index().sort_values('total_revenue_usd', ascending=False)
+
+        # Add city_state for display
+        all_city_sales['city_state'] = all_city_sales['customer_city'] + ', ' + all_city_sales['customer_state']
+        all_city_sales['avg_order_value'] = all_city_sales['total_revenue_usd'] / all_city_sales['order_count']
+
+        # Filter for top cities to avoid overcrowding
+        top_n_cities = st.slider("Number of cities to display", min_value=10, max_value=100, value=30, step=10, key="city_bubble_slider")
+        bubble_data = all_city_sales.head(top_n_cities)
+
+        # Create bubble chart (using scatter with size)
+        fig = px.scatter(
+            bubble_data,
+            x='order_count',
+            y='total_revenue_usd',
+            size='avg_order_value',
+            color='customer_state',
+            hover_name='city_state',
+            hover_data={
+                'order_count': ':,',
+                'total_revenue_usd': ':$,.0f',
+                'avg_order_value': ':$,.2f',
+                'customer_state': False
+            },
+            title=f"Top {top_n_cities} Cities: Revenue vs Order Count (Bubble Size = AOV)",
+            labels={
+                'order_count': 'Order Count',
+                'total_revenue_usd': 'Revenue (USD)',
+                'customer_state': 'State'
+            },
+            size_max=60
+        )
+        fig.update_layout(height=600, showlegend=True)
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.info("""
+        **Bubble Map Insights:**
+        - **X-axis**: Order volume (how many orders)
+        - **Y-axis**: Revenue (how much money)
+        - **Bubble size**: Average Order Value (AOV)
+        - **Color**: State
+        - Large bubbles in top-right = High revenue cities with high AOV
+        """)
 
         # Regional Performance Comparison
         st.subheader("🗺️ Regional Performance Analysis")
