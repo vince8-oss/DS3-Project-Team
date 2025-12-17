@@ -10,7 +10,7 @@ brazilian_sales:
       timeout_seconds: 300
       location: US
       priority: interactive
-      keyfile: /home/eugen/ProjectM2/meltano-bigquery-py311/apc-data-science-and-ai-1c8f5b9e267b.json
+      ##keyfile: /home/eugen/ProjectM2/meltano-bigquery-py311/apc-data-science-and-ai-1c8f5b9e267b.json
     prod:
       type: bigquery
       method: service-account
@@ -20,4 +20,4 @@ brazilian_sales:
       timeout_seconds: 300
       location: US
       priority: interactive
-      keyfile: /home/eugen/ProjectM2/meltano-bigquery-py311/apc-data-science-and-ai-1c8f5b9e267b.json
+      ##keyfile: /home/eugen/ProjectM2/meltano-bigquery-py311/apc-data-science-and-ai-1c8f5b9e267b.json
