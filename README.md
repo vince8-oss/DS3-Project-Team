@@ -1,4 +1,4 @@
-# Brazilian Sales Analytics - Architecture Diagrams
+# Brazilian Sales Analytics
 ## Visual Documentation for Assessment
 
 ---
@@ -665,4 +665,4 @@ SUPPORTING TOOLS:
 **For detailed implementation, refer to:**
 - BRAZILIAN_SALES_COMPLETE_TECHNICAL_DOCUMENTATION.md
 - Individual component guides (Dagster, Docker, dbt)
-- Code files in project repository
+- Code files in project repository - Module_2_Brazilian-sales folder
