@@ -1,0 +1,49 @@
+default_environment: dev
+project_id: 019aeae6-d76d-71f1-9e80-f7b80af925b2
+environments:
+- name: dev
+- name: staging
+- name: prod
+
+plugins:
+  extractors:
+  - name: tap-postgres
+    variant: transferwise
+    pip_url: pipelinewise-tap-postgres
+    python: /home/eugen/ProjectM2/meltano-py310-env/bin/python3.10
+    config:
+      host: localhost
+      port: 5432
+      user: postgres
+      password: PostgresPass123#
+      dbname: Brazilian Sales
+      default_replication_method: FULL_TABLE
+
+  loaders:
+  - name: target-bigquery
+    variant: adswerve
+    pip_url: git+https://github.com/hotgluexyz/target-bigquery.git
+    python: /home/eugen/ProjectM2/meltano-py310-env/bin/python3.10
+    config:
+      project_id: apc-data-science-and-ai
+      dataset_id: brazilian_sales
+      location: US
+      credentials_path: /home/eugen/ProjectM2/apc-data-science-and-ai-e7e24e0b36f7.json
+
+transformers:
+  - name: dbt-bigquery
+    variant: dbt-labs
+    pip_url: dbt-core~=1.5.0 dbt-bigquery~=1.5.0
+    python: /home/eugen/ProjectM2/meltano-py310-env/bin/python3.10  # Same Python!
+    config:
+      project_dir: transform
+      profiles_dir: transform/profiles
+      target: prod
+      
+    # BigQuery-specific settings
+    settings:
+      project: apc-data-science-and-ai
+      dataset: brazilian_sales
+      location: US
+      keyfile: /home/eugen/ProjectM2/apc-data-science-and-ai-e7e24e0b36f7.json
+      threads: 4

@@ -1,0 +1,43 @@
+name: 'brazilian_sales'
+version: '1.0.0'
+config-version: 2
+
+profile: 'brazilian_sales'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+models:
+  brazilian_sales:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
+
+tests:
+  brazilian_sales:
+    +severity: warn
+
+seeds:
+  brazilian_sales:
+    +schema: seeds
+
+snapshots:
+  brazilian_sales:
+    +target_schema: snapshots
+    +unique_key: id
+    +strategy: timestamp

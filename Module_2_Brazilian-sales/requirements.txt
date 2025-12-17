@@ -1,0 +1,121 @@
+# ============================================================================
+# Brazilian Sales Analytics - Complete Requirements
+# ============================================================================
+# Install all dependencies: pip install -r requirements.txt
+
+# ============================================================================
+# CORE DATA TOOLS
+# ============================================================================
+
+# dbt - Data transformation
+dbt-core==1.10.15
+dbt-bigquery==1.10.3
+
+# Meltano - Data integration (if using)
+meltano==3.3.0
+
+# ============================================================================
+# CLOUD & DATABASE
+# ============================================================================
+
+# Google Cloud BigQuery
+google-cloud-bigquery==3.11.4
+google-cloud-storage==2.10.0
+google-auth==2.23.0
+
+# ============================================================================
+# DATA PROCESSING
+# ============================================================================
+
+# Data manipulation
+pandas==2.0.3
+numpy==1.24.3
+
+# Date handling
+python-dateutil==2.8.2
+
+# API requests
+requests==2.31.0
+
+# ============================================================================
+# ORCHESTRATION - DAGSTER
+# ============================================================================
+
+# Core Dagster
+dagster==1.5.11
+dagster-webserver==1.5.11
+
+# Dagster integrations
+dagster-gcp==0.21.11
+dagster-dbt==0.21.11
+dagster-pandas==0.21.11
+
+# ============================================================================
+# VISUALIZATION - STREAMLIT
+# ============================================================================
+
+# Streamlit
+streamlit==1.29.0
+
+# Plotting
+plotly==5.18.0
+
+# ============================================================================
+# DEVELOPMENT & TESTING
+# ============================================================================
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+
+# Code quality
+black==23.12.1
+flake8==7.0.0
+
+# Jupyter notebooks (optional)
+jupyter==1.0.0
+ipython==8.18.1
+
+# ============================================================================
+# UTILITIES
+# ============================================================================
+
+# Environment variables
+python-dotenv==1.0.0
+
+# YAML parsing
+PyYAML==6.0.1
+
+# JSON handling
+ujson==5.9.0
+
+# Progress bars
+tqdm==4.66.1
+
+# ============================================================================
+# OPTIONAL: ALERTS & MONITORING
+# ============================================================================
+
+# Slack notifications (optional)
+# dagster-slack==0.21.11
+
+# Email (optional)
+# sendgrid==6.10.0
+
+# ============================================================================
+# NOTES
+# ============================================================================
+# 
+# Installation:
+#   pip install -r requirements.txt
+#
+# Update all packages:
+#   pip install --upgrade -r requirements.txt
+#
+# Freeze current environment:
+#   pip freeze > requirements-frozen.txt
+#
+# Create virtual environment:
+#   conda create -n brazilian_sales python=3.10
+#   conda activate brazilian_sales
+#   pip install -r requirements.txt

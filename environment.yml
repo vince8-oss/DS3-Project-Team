@@ -1,0 +1,52 @@
+name: ds3
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11.14
+  - pip
+  # Optional: use conda for common scientific libs if desired
+  - numpy
+  - pandas
+  - pip:
+      - meltano>=3.0.0
+      - snowplow-tracker<1.0.0
+      - bandit==1.7.6
+      - black==23.12.1
+      - coverage[toml]==7.4.0
+      - db-dtypes==1.1.1
+      - dbt-bigquery==1.8.3
+      - dbt-core==1.8.5
+      - flake8==6.1.0
+      - google-auth==2.25.2
+      - google-cloud-bigquery==3.14.1
+      - google-cloud-secret-manager==2.17.0
+      - google-cloud-storage==2.14.0
+      - great_expectations==0.18.19
+      - ipykernel==6.27.1
+      - isort==5.13.2
+      - jupyter==1.0.0
+      - kaggle==1.7.4.5
+      - matplotlib==3.8.2
+      - mypy==1.7.1
+      - notebook==7.0.6
+      - numpy==1.26.2
+      - openpyxl==3.1.2
+      - pandas==2.1.4
+      - pandas-stubs==2.1.4.231227
+      - plotly==5.18.0
+      - pre-commit==3.6.0
+      - pyarrow==14.0.1
+      - pytest==7.4.3
+      - pytest-cov==4.1.0
+      - pytest-mock==3.12.0
+      - pytest-timeout==2.2.0
+      - pytest-xdist==3.5.0
+      - python-dotenv==1.0.0
+      - requests==2.31.0
+      - safety==3.0.1
+      - seaborn==0.13.0
+      - streamlit==1.30.0
+      - streamlit-aggrid==0.3.4
+      - structlog==23.2.0
+      - tqdm==4.67.1
+      - types-requests==2.31.0.10
