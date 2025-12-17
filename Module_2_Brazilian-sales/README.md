@@ -1066,9 +1066,8 @@ This pipeline is production-ready, scalable to 10x+ data volume, and serves as a
 
 ---
 
-**Author:** Eugen  
+
 **Project:** Brazilian Sales Analytics Platform  
-**Completion:** December 2025  
 **Technology:** PostgreSQL → Meltano → BigQuery → dbt → Streamlit → Dagster → Docker  
 **Status:** ✅ Production-ready
 
