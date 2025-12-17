@@ -34,6 +34,7 @@ build/
 .ipynb_checkpoints/
 .jupyter/
 .env
+.ipynb
 
 # VSCode settings
 .vscode/
